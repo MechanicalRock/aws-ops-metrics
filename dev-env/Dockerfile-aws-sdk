@@ -1,0 +1,6 @@
+FROM python:2-alpine
+
+RUN pip install awscli
+
+RUN apk update
+RUN apk add bash git openssh

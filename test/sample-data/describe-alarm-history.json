@@ -1,0 +1,32 @@
+{
+  "AlarmHistoryItems": [
+      {
+          "Timestamp": "2019-05-27T08:18:37.939Z", 
+          "HistoryItemType": "ConfigurationUpdate", 
+          "AlarmName": "foo", 
+          "HistoryData": "{\"type\":\"Update\",\"updatedAlarm\":{\"alarmConfigurationUpdatedTimestamp\":\"2019-05-27T08:18:37.941+0000\",\"namespace\":\"AWS/Lambda\",\"insufficientDataActions\":[],\"threshold\":0.0,\"stateUpdatedTimestamp\":\"2019-05-27T08:17:07.391+0000\",\"metricName\":\"Errors\",\"alarmActions\":[\"arn:aws:sns:ap-southeast-2:1234567890:foo-notifier\"],\"comparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"alarmName\":\"foo\",\"stateValue\":\"ALARM\",\"evaluationPeriods\":3,\"alarmArn\":\"arn:aws:cloudwatch:ap-southeast-2:1234567890:alarm:foo\",\"alarmDescription\":\"are there errors?\",\"actionsEnabled\":true,\"statistic\":\"Sum\",\"dimensions\":[],\"period\":3600,\"treatMissingData\":\"ignore\",\"okactions\":[]},\"originalUpdatedFields\":{\"alarmConfigurationUpdatedTimestamp\":\"2019-05-27T08:16:59.976+0000\",\"statistic\":\"Average\",\"period\":300},\"version\":\"1.0\"}", 
+          "HistorySummary": "Alarm \"foo\" updated"
+      }, 
+      {
+          "Timestamp": "2019-05-27T08:17:07.392Z", 
+          "HistoryItemType": "Action", 
+          "AlarmName": "foo", 
+          "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1558945027391,\"notificationResource\":\"arn:aws:sns:ap-southeast-2:1234567890:foo-notifier\",\"publishedMessage\":\"{\\\"default\\\":\\\"{\\\\\\\"AlarmName\\\\\\\":\\\\\\\"foo\\\\\\\",\\\\\\\"AlarmDescription\\\\\\\":\\\\\\\"are there errors?\\\\\\\",\\\\\\\"AWSAccountId\\\\\\\":\\\\\\\"1234567890\\\\\\\",\\\\\\\"NewStateValue\\\\\\\":\\\\\\\"ALARM\\\\\\\",\\\\\\\"NewStateReason\\\\\\\":\\\\\\\"Threshold Crossed: 3 datapoints [0.0 (27/05/19 08:07:00), 0.0 (27/05/19 08:02:00), 0.0 (27/05/19 07:57:00)] were greater than or equal to the threshold (0.0).\\\\\\\",\\\\\\\"StateChangeTime\\\\\\\":\\\\\\\"2019-05-27T08:17:07.391+0000\\\\\\\",\\\\\\\"Region\\\\\\\":\\\\\\\"Asia Pacific (Sydney)\\\\\\\",\\\\\\\"OldStateValue\\\\\\\":\\\\\\\"INSUFFICIENT_DATA\\\\\\\",\\\\\\\"Trigger\\\\\\\":{\\\\\\\"MetricName\\\\\\\":\\\\\\\"Errors\\\\\\\",\\\\\\\"Namespace\\\\\\\":\\\\\\\"AWS/Lambda\\\\\\\",\\\\\\\"StatisticType\\\\\\\":\\\\\\\"Statistic\\\\\\\",\\\\\\\"Statistic\\\\\\\":\\\\\\\"AVERAGE\\\\\\\",\\\\\\\"Unit\\\\\\\":null,\\\\\\\"Dimensions\\\\\\\":[],\\\\\\\"Period\\\\\\\":300,\\\\\\\"EvaluationPeriods\\\\\\\":3,\\\\\\\"ComparisonOperator\\\\\\\":\\\\\\\"GreaterThanOrEqualToThreshold\\\\\\\",\\\\\\\"Threshold\\\\\\\":0.0,\\\\\\\"TreatMissingData\\\\\\\":\\\\\\\"- TreatMissingData:                    Ignore\\\\\\\",\\\\\\\"EvaluateLowSampleCountPercentile\\\\\\\":\\\\\\\"\\\\\\\"}}\\\",\\\"sms\\\":\\\"ALARM: \\\\\\\"foo\\\\\\\" in Asia Pacific (Sydney)\\\",\\\"email\\\":\\\"You are receiving this email because your Amazon CloudWatch Alarm \\\\\\\"foo\\\\\\\" in the Asia Pacific (Sydney) region has entered the ALARM state, because \\\\\\\"Threshold Crossed: 3 datapoints [0.0 (27/05/19 08:07:00), 0.0 (27/05/19 08:02:00), 0.0 (27/05/19 07:57:00)] were greater than or equal to the threshold (0.0).\\\\\\\" at \\\\\\\"Monday 27 May, 2019 08:17:07 UTC\\\\\\\".\\\\n\\\\nView this alarm in the AWS Management Console:\\\\nhttps://console.aws.amazon.com/cloudwatch/home?region=ap-southeast-2#s=Alarms&alarm=foo\\\\n\\\\nAlarm Details:\\\\n- Name:                       foo\\\\n- Description:                are there errors?\\\\n- State Change:               INSUFFICIENT_DATA -> ALARM\\\\n- Reason for State Change:    Threshold Crossed: 3 datapoints [0.0 (27/05/19 08:07:00), 0.0 (27/05/19 08:02:00), 0.0 (27/05/19 07:57:00)] were greater than or equal to the threshold (0.0).\\\\n- Timestamp:                  Monday 27 May, 2019 08:17:07 UTC\\\\n- AWS Account:                1234567890\\\\n\\\\nThreshold:\\\\n- The alarm is in the ALARM state when the metric is GreaterThanOrEqualToThreshold 0.0 for 300 seconds. \\\\n\\\\nMonitored Metric:\\\\n- MetricNamespace:                     AWS/Lambda\\\\n- MetricName:                          Errors\\\\n- Dimensions:                          \\\\n- Period:                              300 seconds\\\\n- Statistic:                           Average\\\\n- Unit:                                not specified\\\\n- TreatMissingData:                    Ignore\\\\n\\\\n\\\\nState Change Actions:\\\\n- OK: \\\\n- ALARM: [arn:aws:sns:ap-southeast-2:1234567890:foo-notifier]\\\\n- INSUFFICIENT_DATA: \\\\n\\\"}\",\"error\":null}", 
+          "HistorySummary": "Successfully executed action arn:aws:sns:ap-southeast-2:1234567890:foo-notifier"
+      }, 
+      {
+          "Timestamp": "2019-05-27T08:17:07.391Z", 
+          "HistoryItemType": "StateUpdate", 
+          "AlarmName": "foo", 
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"INSUFFICIENT_DATA\",\"stateReason\":\"Unchecked: Initial alarm creation\"},\"newState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 3 datapoints [0.0 (27/05/19 08:07:00), 0.0 (27/05/19 08:02:00), 0.0 (27/05/19 07:57:00)] were greater than or equal to the threshold (0.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2019-05-27T08:17:07.386+0000\",\"startDate\":\"2019-05-27T07:57:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[0.0,0.0,0.0],\"threshold\":0.0}}}", 
+          "HistorySummary": "Alarm updated from INSUFFICIENT_DATA to ALARM"
+      }, 
+      {
+          "Timestamp": "2019-05-27T08:16:59.976Z", 
+          "HistoryItemType": "ConfigurationUpdate", 
+          "AlarmName": "foo", 
+          "HistoryData": "{\"type\":\"Create\",\"createdAlarm\":{\"alarmConfigurationUpdatedTimestamp\":\"2019-05-27T08:16:59.976+0000\",\"namespace\":\"AWS/Lambda\",\"insufficientDataActions\":[],\"threshold\":0.0,\"stateUpdatedTimestamp\":\"2019-05-27T08:16:59.976+0000\",\"metricName\":\"Errors\",\"alarmActions\":[\"arn:aws:sns:ap-southeast-2:1234567890:foo-notifier\"],\"comparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"alarmName\":\"foo\",\"stateValue\":\"INSUFFICIENT_DATA\",\"evaluationPeriods\":3,\"alarmArn\":\"arn:aws:cloudwatch:ap-southeast-2:1234567890:alarm:foo\",\"alarmDescription\":\"are there errors?\",\"actionsEnabled\":true,\"statistic\":\"Average\",\"dimensions\":[],\"period\":300,\"treatMissingData\":\"ignore\",\"okactions\":[]},\"version\":\"1.0\"}", 
+          "HistorySummary": "Alarm \"foo\" created"
+      }
+  ]
+}
