@@ -2,6 +2,11 @@
 
 Generate MTTR, MTTF, MTBF metrics for lambda functions.
 
+This implementation uses CloudWatch Alarms history to calculate metrics.
+
+This implementation is limited to the [14 day retention](https://aws.amazon.com/cloudwatch/faqs/) period for CloudWatch Alarms. For a longer retention period, CloudWatch Alarms History would need to be stored separately, e.g. DynamoDB
+
+
 # WHAT
 
 TODO - What does the project do?

@@ -1,0 +1,55 @@
+service:
+  name: lambda-ops-metrics-eg
+
+plugins:
+  - serverless-webpack
+  - serverless-pseudo-parameters
+
+custom:
+  stage: '${opt:stage,"dev"}'
+  opsMetricsTopicArn: arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:lambda-ops-metrics
+  flakyFunctionName: "${self:service.name}-${self:custom.stage}-flaky"
+
+provider:
+  name: aws
+  # region: ap-southeast-2
+  runtime: nodejs8.10
+
+
+functions:
+  flaky:
+    handler: handler.flaky
+
+resources:
+  Resources:
+    FlakyServiceAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: flaky-service
+        AlarmDescription: Example alarm for a flaky service - demonstrate capturing metrics based on alarms.
+        # The metric to alarm on
+        Namespace: "AWS/Lambda"
+        MetricName: "Errors"
+        Dimensions:
+          - Name: "FunctionName"
+            Value: "${self:custom.flakyFunctionName}"
+        
+        # What to measure
+        Statistic: "Sum"
+        Period: 60
+        Unit: Seconds
+        
+        # When to alarm
+        TreatMissingData: "missing"
+        ComparisonOperator: GreaterThanThreshold
+        DatapointsToAlarm: 1
+        EvaluationPeriods: 1
+        Threshold: 0.0
+
+        # Generate Ops Metrics for state transitions
+        ActionsEnabled: true
+        AlarmActions:
+          - "${self:custom.opsMetricsTopicArn}"
+        OKActions:
+          - "${self:custom.opsMetricsTopicArn}"
+        

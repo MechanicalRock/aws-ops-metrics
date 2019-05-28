@@ -1,0 +1,29 @@
+{
+  "AlarmName": "foo",
+  "AlarmDescription": "bar",
+  "AWSAccountId": "1234567890",
+  "NewStateValue": "ALARM",
+  "NewStateReason": "Threshold Crossed: 1 datapoint [1.0 (29/05/19 11:59:00)] was greater than the threshold (0.0).",
+  "StateChangeTime": "2019-05-29T12:01:24.110+0000",
+  "Region": "US East (N. Virginia)",
+  "OldStateValue": "INSUFFICIENT_DATA",
+  "Trigger": {
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "StatisticType": "Statistic",
+    "Statistic": "SUM",
+    "Unit": null,
+    "Dimensions": [
+      {
+        "value": "lambda-ops-metrics-eg-dev-flaky",
+        "name": "FunctionName"
+      }
+    ],
+    "Period": 60,
+    "EvaluationPeriods": 1,
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Threshold": 0.0,
+    "TreatMissingData": "- TreatMissingData:                    missing",
+    "EvaluateLowSampleCountPercentile": ""
+  }
+}

@@ -28,30 +28,30 @@
   },
   "author": "Tim Myerscough <tim.myerscough@mechanicalrock.io>",
   "contributors": [],
-  "license": "MIT",
+  "license": "Apache 2.0",
   "bugs": {
     "url": "TODO"
   },
   "homepage": "TODO",
   "dependencies": {
-    "aws-sdk": "^2.94.0"
+    "aws-sdk": "^2.463.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.26",
-    "@types/jest": "^22.2.3",
+    "@types/jest": "^24.0.13",
     "@types/mockdate": "^2.0.0",
     "@types/node": "^10.1.2",
-    "aws-sdk-mock": "^1.7.0",
+    "aws-sdk-mock": "^4.4.0",
     "jest-cucumber": "^2.0.12",
-    "mockdate": "^2.0.2",
-    "serverless": "^1.43.0",
+    "serverless": "^1.44.0",
+    "serverless-pseudo-parameters": "^2.4.0",
     "serverless-webpack": "^5.3.0",
-    "snyk": "^1.167.2",
-    "source-map-support": "^0.5.6",
+    "snyk": "^1.168.0",
+    "source-map-support": "^0.5.12",
     "ts-jest": "^24.0.2",
-    "ts-loader": "^4.3.0",
-    "typescript": "^2.8.3",
-    "webpack": "^4.8.3"
+    "ts-loader": "^6.0.1",
+    "typescript": "^3.4.5",
+    "webpack": "^4.32.2"
   },
   "eslintConfig": {
     "extends": "react-app"

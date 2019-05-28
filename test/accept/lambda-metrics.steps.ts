@@ -1,36 +1,62 @@
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { Rocket } from '../../src/Rocket';
 import { AlarmHistoryItems, AlarmHistoryItem } from 'aws-sdk/clients/cloudwatch';
-import { CloudWatch } from 'aws-sdk';
-// var MockDate = require('mockdate');
-import * as MockDate from 'mockdate'
-import { handler } from '../../src/mttf'
-
+import { handler as mttf } from '../../src/mttf'
+import { handler as mttr } from '../../src/mttr'
+import { handler as mtbf } from '../../src/mtbf'
+import { CloudWatchAlarmNotificationMessage } from '../../src/cloudwatchAlarmSnsEvent';
 
 var AWS = require('aws-sdk-mock');
-
-var foo: CloudWatch;
 
 const feature = loadFeature('./features/lambda-metrics.feature');
 
 defineFeature(feature, test => {
-  test('Generate MTTF', ({ given, when, then }) => {
-    var alarmHistory: AlarmHistoryItems = []
-    let alarmName;
-    let cloudWatchSpy = jest.fn().mockReturnValue({})
 
-    beforeAll(async () => {
 
-      AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
-        callback(null,cloudWatchSpy(params))
-      });
+  var alarmHistory: AlarmHistoryItems = []
+  let alarmName;
+  let cloudWatchSpy = jest.fn().mockReturnValue({})
 
-    })
+  beforeEach(async () => {
 
-    afterAll(() => {
-      MockDate.reset()
-    })
+    AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
+      callback(null, cloudWatchSpy(params))
+    });
 
+  })
+
+  afterEach(() => {
+    AWS.restore()
+  })
+
+  test('Service Fails', ({ given, when, then }) => {
+
+    givenCloudWatchAlarmHasHistory(given)
+
+    whenCloudWatchAlarmStateChanges(when)
+
+    thenCloudWatchMetricShouldBeGenerated(then)
+
+  });
+
+  test('Service Restored', ({ given, when, then }) => {
+
+    givenCloudWatchAlarmHasHistory(given)
+
+    whenCloudWatchAlarmStateChanges(when)
+
+    thenCloudWatchMetricShouldBeGenerated(then)
+  });
+
+  test('Service Fails Again', ({ given, when, then }) => {
+    givenCloudWatchAlarmHasHistory(given)
+
+    whenCloudWatchAlarmStateChanges(when)
+
+    thenCloudWatchMetricShouldBeGenerated(then)
+
+  });
+
+  function givenCloudWatchAlarmHasHistory(given) {
     given(/^CloudWatch alarm "(.*)" has the following history:$/, (name, table) => {
       alarmName = name
       var alarmHistoryResp = {
@@ -75,11 +101,12 @@ defineFeature(feature, test => {
       })
 
       AWS.mock('CloudWatch', 'describeAlarmHistory', alarmHistoryResp);
-    });
+    })
 
-    when(/^CloudWatch alarm state changes to ALARM at "(.*)"$/, async (time) => {
+  }
 
-      MockDate.set(time)
+  function whenCloudWatchAlarmStateChanges(when) {
+    when(/^CloudWatch alarm state changes to (.*) at "(.*)"$/, async (newState, time) => {
 
       const prevState = JSON.parse(alarmHistory[alarmHistory.length - 1].HistoryData || "{}").newState.stateValue
 
@@ -92,7 +119,7 @@ defineFeature(feature, test => {
         },
         newState:
         {
-          stateValue: 'ALARM',
+          stateValue: newState,
           stateReason: 'more blah',
           stateReasonData:
           {
@@ -118,7 +145,13 @@ defineFeature(feature, test => {
       // alarmHistory is returned in descending order
       alarmHistory.unshift(item)
 
-      // TODO simulate a lambda notification.
+      const snsNotificationMessage: Partial<CloudWatchAlarmNotificationMessage> = {
+        AlarmName: alarmName,
+        NewStateValue: newState,
+        OldStateValue: prevState,
+        StateChangeTime: time,
+      }
+
       const mockSnsEvent = {
         "Records": [
           {
@@ -130,7 +163,7 @@ defineFeature(feature, test => {
               "MessageId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
               "TopicArn": "arn:aws:sns:eu-west-1:000000000000:cloudwatch-alarms",
               "Subject": "ALARM: \"Example alarm name\" in EU - Ireland",
-              "Message": JSON.stringify(item),
+              "Message": JSON.stringify(snsNotificationMessage),
               "Timestamp": "2017-01-12T16:30:42.318Z",
               "SignatureVersion": "1",
               "Signature": "Cg==",
@@ -142,47 +175,21 @@ defineFeature(feature, test => {
         ]
       }
 
-      await handler(mockSnsEvent)
+      // simulate all the functions receiving the event
+      await mttf(mockSnsEvent)
+      await mttr(mockSnsEvent)
+      await mtbf(mockSnsEvent)
 
     });
+  }
 
+  function thenCloudWatchMetricShouldBeGenerated(then) {
     then('the following CloudWatch metric should be generated:', (docString) => {
-      // const expected = {
-      //   MetricData: [
-      //     JSON.parse(docString)
-      //   ],
-      //   Namespace: "Operations"
-      // };
       const expected = JSON.parse(docString)
-      // const expectedTime = expected.MetricData[0].Timestamp
-      expected.MetricData[0].Timestamp = expect.anything()
+      const expectedTsStr = expected.MetricData[0].Timestamp
+      expected.MetricData[0].Timestamp = new Date(expectedTsStr)
       expect(cloudWatchSpy).toBeCalledWith(expected)
     });
-  });
-
-  test('Service Restored', ({ given, when, then }) => {
-    given(/^CloudWatch alarm (.*) has the following history:$/, (arg0, table) => {
-
-    });
-
-    when(/^CloudWatch alarm state changes to OK at "(.*)"$/, async (time) => {
-    })
-
-    then('the following CloudWatch metric should be generated:', (docString) => {
-
-    });
-  });
-
-  test('Service Fails Again', ({ given, when, then }) => {
-    given(/^CloudWatch alarm (.*) has the following history:$/, (arg0, table) => {
-
-    });
-    when(/^CloudWatch alarm state changes to ALARM at "(.*)"$/, async (time) => {
-    })
-
-    then('the following CloudWatch metric should be generated:', (docString) => {
-
-    });
-  });
+  }
 
 });

@@ -14,7 +14,7 @@ Rules:
  - Dimensions:
     - service name (based on alarm)
   
-Scenario: Generate MTTF
+Scenario: Service Fails
   Given CloudWatch alarm "foo" has the following history:
   | date                     | state | oldSate           |
   | 2019-01-01T00:00:00.000Z | OK    | INSUFFICIENT_DATA |
@@ -43,8 +43,8 @@ Scenario: Generate MTTF
 Scenario: Service Restored
   Given CloudWatch alarm "foo" has the following history:
   | date                     | state | oldSate           |
-  | 2019-01-01T00:00:00.000Z | OK    | INSUFFICIENT_DATA |
   | 2019-01-01T00:01:30.000Z | ALARM | OK                |
+  | 2019-01-01T00:00:00.000Z | OK    | INSUFFICIENT_DATA |
   When CloudWatch alarm state changes to OK at "2019-01-01T01:01:30.000Z"
   Then the following CloudWatch metric should be generated:
   """
@@ -70,9 +70,9 @@ Scenario: Service Restored
 Scenario: Service Fails Again
   Given CloudWatch alarm "foo" has the following history:
   | date                     | state | oldSate           |
-  | 2019-01-01T00:01:30.000Z | ALARM | INSUFFICIENT_DATA |
   | 2019-01-01T01:01:30.000Z | OK    | ALARM             |
-  When CloudWatch alarm state changes to ALARM at "2019-01-01T00:02:30.000Z"
+  | 2019-01-01T00:01:30.000Z | ALARM | INSUFFICIENT_DATA |
+  When CloudWatch alarm state changes to ALARM at "2019-01-01T02:01:30.000Z"
   Then the following CloudWatch metric should be generated:
   """
   {
@@ -86,7 +86,7 @@ Scenario: Service Fails Again
       }
       ],
       "Timestamp": "2019-01-01T02:01:30.000Z",
-      "Value": 3600,
+      "Value": 7200,
       "Unit": "Seconds"
       }
     ],
