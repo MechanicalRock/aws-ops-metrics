@@ -1,6 +1,6 @@
 version: '2'
 services:
-  serverless:
+  dev-env:
     build:
       context: .
     working_dir: /app
@@ -15,23 +15,6 @@ services:
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
       - SNYK_TOKEN
-    entrypoint:
-      - /bin/bash
-  dev-env-aws:
-    build:
-      context: dev-env
-      dockerfile: Dockerfile-aws-sdk
-    working_dir: /app
-    volumes:
-      - .:/app
-      - ~/.aws/:/root/.aws
-      - ~/.gitconfig
-    environment:
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_PROFILE
-      - AWS_SESSION_TOKEN
-      - AWS_SECURITY_TOKEN
     entrypoint:
       - /bin/bash
   localstack:
