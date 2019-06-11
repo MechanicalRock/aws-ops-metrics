@@ -25,6 +25,65 @@ This project uses notification actions from Cloud Watch Alarms, to trigger lambd
 
 Metrics are generated under the namespace `Operations`, named for the metric, e.g. `MTTF`, `MTTR`.  A metric dimension `service` is generated based on the alarm name.
 
+## Adding to your project
+
+This project does not define the alarms you wish to monitor, but provides the framework for notifying on those metrics.
+
+Given your alarm configuration:
+```
+FlakyServiceAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: flaky-service
+        AlarmDescription: Example alarm for a flaky service - demonstrate capturing metrics based on alarms.
+        # The metric to alarm on
+        Namespace: "AWS/Lambda"
+        MetricName: "Errors"
+        Dimensions:
+          - Name: "FunctionName"
+            Value: "${self:custom.flakyFunctionName}"
+        
+        # What to measure
+        Statistic: "Sum"
+        Period: 60
+        Unit: Seconds
+        
+        # When to alarm
+        TreatMissingData: "missing"
+        ComparisonOperator: GreaterThanThreshold
+        DatapointsToAlarm: 1
+        EvaluationPeriods: 1
+        Threshold: 0.0
+
+        # Generate Ops Metrics for state transitions
+        ActionsEnabled: true
+        AlarmActions:
+          - "${self:custom.opsMetricsTopicArn}"
+        OKActions:
+          - "${self:custom.opsMetricsTopicArn}"
+```
+
+Adding in the integration to notification is enabled using the snippet:
+```
+        # Generate Ops Metrics for state transitions
+        ActionsEnabled: true
+        AlarmActions:
+          - "${self:custom.opsMetricsTopicArn}"
+        OKActions:
+          - "${self:custom.opsMetricsTopicArn}"
+```
+
+Where `"${self:custom.opsMetricsTopicArn}"` is the topic ARN for the metrics notifications.
+
+This can be calculated as: `arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:lambda-ops-metrics`
+
+The value can also be imported using the export name: `#{AWS::StackName}-metric-topic-arn`
+
+Where `#{AWS::StackName}` is the name of the deployed metric stack - e.g. `lambda-ops-metrics-dev`
+```
+!ImportValue lambda-ops-metrics-dev-metric-topic-arn
+```
+
 # Setup
 
 Ensure you have AWS credentials configured in `~/.aws/credentials`.  If you use `AWS_PROFILE`, please note that Serverless Framework requires these profiles to be configured in `~/.aws/credentials` also, rather than `~/.aws/config`
