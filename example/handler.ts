@@ -1,22 +1,21 @@
-import 'source-map-support/register';
+import "source-map-support/register";
 
 export async function flaky(event) {
 
-  const up = new Error('Boom')
+  const up = new Error("Boom");
   if (event.bomb || failRandomly()) {
-    throw up
+    throw up;
   }
 
-  return {}
+  return {};
 
 }
 
 function failRandomly() {
   // otherwise, fail randomly, 1 in 10
-  return random(0, 10) === 10
+  return random(0, 10) === 10;
 }
-
-function random(min, max) // min and max included
-{
+// min and max included
+function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
