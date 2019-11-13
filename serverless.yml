@@ -13,8 +13,8 @@ provider:
   iamRoleStatements:
     - Effect: "Allow"
       Action: 
-       - "cloudwatch:DescribeAlarmHistory"
-       - "cloudwatch:PutMetricData"
+        - "cloudwatch:DescribeAlarmHistory"
+        - "cloudwatch:PutMetricData"
       Resource: "*"
 
 
