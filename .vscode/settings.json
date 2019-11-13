@@ -1,0 +1,25 @@
+{
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": false,
+  "editor.rulers": [
+    100
+  ],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "prettier.printWidth": 100,
+  "prettier.trailingComma": "all",
+  "prettier.bracketSpacing": true,
+  "prettier.jsxBracketSameLine": false,
+  "prettier.parser": "babylon",
+  "prettier.useTabs": false,
+  "prettier.arrowParens": "avoid",
+  "prettier.singleQuote": true,
+  "tslint.enable": true,
+  "tslint.autoFixOnSave": true,
+  "files.associations": {
+    "*.json": "jsonc"
+  }
+}
