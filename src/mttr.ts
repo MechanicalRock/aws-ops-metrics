@@ -4,8 +4,8 @@ import { calculateMetric } from "./common";
 
 export async function handler(event: SNSEvent) {
 
-  const metric = calculateMetric('MTTR', AlarmState.OK, AlarmState.ALARM)
+  const metric = calculateMetric("MTTR", AlarmState.OK, AlarmState.ALARM);
 
-  return await metric(event)
+  return await metric(event);
 
 }

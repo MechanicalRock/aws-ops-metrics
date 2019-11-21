@@ -41,12 +41,15 @@
     "@types/jest": "^24.0.13",
     "@types/mockdate": "^2.0.0",
     "@types/node": "^10.1.2",
+    "@typescript-eslint/eslint-plugin": "2.7.0",
+    "@typescript-eslint/parser": "2.7.0",
     "aws-sdk-mock": "^4.4.0",
+    "eslint": "^6.6.0",
     "jest-cucumber": "^2.0.12",
     "serverless": "^1.44.0",
     "serverless-pseudo-parameters": "^2.4.0",
     "serverless-webpack": "^5.3.0",
-    "snyk": "^1.168.0",
+    "snyk": "^1.245.0",
     "source-map-support": "^0.5.12",
     "ts-jest": "^24.0.2",
     "ts-loader": "^6.0.1",
@@ -54,6 +57,28 @@
     "webpack": "^4.32.2"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": [
+        "./tsconfig.json",
+        "./tsconfig.test.json",
+        "./example/webpack.config.js",
+        "./jest.config.js",
+        "./jest.integration.js",
+        "./source-map-install.js",
+        "./webpack.config.js"
+      ]
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "@typescript-eslint/rule-name": "error"
+    }
   }
 }
