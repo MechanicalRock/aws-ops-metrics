@@ -9,6 +9,7 @@
     "ci:upgrade-dependencies": "./upgrade-dependencies.sh",
     "dependency:upgrade": "npm upgrade --latest",
     "deploy:dev": "serverless deploy --stage dev",
+    "delete:dev": "serverless remove --stage dev",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
     "package": "serverless package",

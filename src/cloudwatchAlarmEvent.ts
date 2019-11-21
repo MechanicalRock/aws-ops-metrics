@@ -1,23 +1,19 @@
-import { SNSEvent } from "aws-lambda";
 import { AlarmState } from "./alarmHistory";
+import { CloudwatchStateChangeEvent } from './common';
 
-export function isAlarmEventForState(event: SNSEvent, state: AlarmState) {
-  const newState = parse(event).NewStateValue || "unknown";
+export function isAlarmEventForState(event: CloudwatchStateChangeEvent, state: AlarmState) {
+  const newState = event.detail.state.value || "unknown";
   return newState === state;
 }
 
-export function metricTimestampFromAlarmEvent(event: SNSEvent) {
-  const timeStr = parse(event).StateChangeTime || new Date().toISOString();
+export function metricTimestampFromAlarmEvent(event: CloudwatchStateChangeEvent) {
+  const timeStr = event.detail.state.timestamp || new Date().toISOString();
   const metricTime = timeStr ? new Date(timeStr) : new Date();
   return metricTime;
 }
 
-export function alarmNameFromAlarmEvent(event: SNSEvent): string {
-  return parse(event).AlarmName || "unknown";
-}
-
-function parse(event: SNSEvent) {
-  return JSON.parse(event.Records[0].Sns.Message) as ICloudWatchAlarmNotificationMessage;
+export function alarmNameFromAlarmEvent(event: CloudwatchStateChangeEvent): string {
+  return event.detail.alarmName || "unknown";
 }
 
 export interface ICloudWatchAlarmNotificationMessage {

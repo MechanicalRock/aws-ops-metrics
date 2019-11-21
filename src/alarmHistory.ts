@@ -1,8 +1,10 @@
 import { AlarmHistoryItems, DescribeAlarmHistoryOutput } from "aws-sdk/clients/cloudwatch";
+import { CloudwatchStateChangeEvent } from './common';
 
 export enum AlarmState {
   OK = "OK",
   ALARM = "ALARM",
+  INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
 }
 
 interface IHistoryDataType {
@@ -28,7 +30,7 @@ interface IHistoryDataType {
   };
 }
 
-export function secondsBetween(alarmHistory: DescribeAlarmHistoryOutput, newState: AlarmState, oldState: AlarmState):
+export function secondsBetweenFromHistory(alarmHistory: DescribeAlarmHistoryOutput, newState: AlarmState, oldState: AlarmState):
   number {
   let items = alarmHistory.AlarmHistoryItems || [];
   // const by = state => item => item.HistoryItemType === 'StateUpdate' && itemHasState(item.HistoryData, state);
@@ -55,12 +57,33 @@ export function secondsBetween(alarmHistory: DescribeAlarmHistoryOutput, newStat
   }
 }
 
+export function secondsBetweenPreviouseState(event: CloudwatchStateChangeEvent, newState: AlarmState, oldState: AlarmState):
+  number {
+  try {
+    const newStateDate = new Date(event.detail.state.timestamp);
+    const oldStateDate = new Date(event.detail.previousState.timestamp);
+
+    const diff = (newStateDate.getTime() - oldStateDate.getTime()) / 1000;
+    console.log("Time difference is: ", diff);
+
+    if (diff < 0) {
+      const msg = `States [${newState},${oldState}] found in the wrong order`;
+      console.warn(msg);
+      const up = new Error(msg);
+      throw up;
+    }
+
+    return diff;
+  } catch (err) {
+    throw new Error(`Failed to calculate the difference between: [new: ${newState}, old:${oldState}] in ${JSON.stringify(event)}`);
+  }
+}
+
 const by = (state) => (item) => item.HistoryItemType === "StateUpdate" && itemHasState(item.HistoryData, state);
 
 function dateOfFirst(items, state) {
   const stateItem = items.find(by(state));
   return new Date(stateItem.Timestamp);
-
 }
 
 function removeFirst(items: AlarmHistoryItems, state: AlarmState) {
