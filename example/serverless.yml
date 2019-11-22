@@ -33,11 +33,11 @@ resources:
         Dimensions:
           - Name: "FunctionName"
             Value: "${self:custom.flakyFunctionName}"
-        
+
         # What to measure
         Statistic: "Sum"
         Period: 60
-        
+
         # When to alarm
         TreatMissingData: "missing"
         ComparisonOperator: GreaterThanThreshold
@@ -45,10 +45,3 @@ resources:
         EvaluationPeriods: 1
         Threshold: 0.0
 
-        # Generate Ops Metrics for state transitions
-        ActionsEnabled: true
-        AlarmActions:
-          - "${self:custom.opsMetricsTopicArn}"
-        OKActions:
-          - "${self:custom.opsMetricsTopicArn}"
-        

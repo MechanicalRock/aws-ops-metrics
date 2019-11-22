@@ -18,8 +18,13 @@ provider:
       Resource: "*"
     - Effect: "Allow"
       Action:
-        - events:*
-      Resource: "*"
+        - events:PutRule
+        - events:PutTargets
+        - events:EnableRule
+      Resource:
+        - arn:aws:events:#{AWS::Region}:#{AWS::AccountId}:rule/mtbf-ops-metrics-alarm-state-change
+        - arn:aws:events:#{AWS::Region}:#{AWS::AccountId}:rule/mttr-ops-metrics-alarm-state-change
+        - arn:aws:events:#{AWS::Region}:#{AWS::AccountId}:rule/mttf-ops-metrics-alarm-state-change
 
 
 custom:
@@ -62,10 +67,3 @@ functions:
               - "aws.cloudwatch"
             detail-type:
               - "CloudWatch Alarm State Change"
-
-resources:
-  Resources:
-    MetricTopic:
-      Type: 'AWS::SNS::Topic'
-      Properties:
-        TopicName: ${self:custom.topic}
