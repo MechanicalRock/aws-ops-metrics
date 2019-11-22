@@ -98,7 +98,7 @@ describe('alarmHistory', () => {
       modifyEvent.detail.previousState.value = "OK";
       modifyEvent.detail.previousState.timestamp = "2019-01-01T00:00:30.000Z";
 
-      expect(secondsBetweenPreviouseState(modifyEvent, AlarmState.ALARM, AlarmState.OK)).toBe(60)
+      expect(secondsBetweenPreviouseState(modifyEvent)).toBe(60)
     })
 
     it('should calculate the time between subsequent items of the same state', () => {
@@ -107,11 +107,11 @@ describe('alarmHistory', () => {
       modifyEvent.detail.state.timestamp = "2019-01-01T00:01:30.000Z";
       modifyEvent.detail.previousState.value = "ALARM";
       modifyEvent.detail.previousState.timestamp = "2019-01-01T00:00:00.000Z";
-      expect(secondsBetweenPreviouseState(modifyEvent, AlarmState.ALARM, AlarmState.ALARM)).toBe(90)
+      expect(secondsBetweenPreviouseState(modifyEvent)).toBe(90)
     })
 
     it('should fail if cloudwatch event is empty', () => {
-      expect(() => secondsBetweenPreviouseState({} as CloudwatchStateChangeEvent, AlarmState.ALARM, AlarmState.OK)).toThrow()
+      expect(() => secondsBetweenPreviouseState({} as CloudwatchStateChangeEvent)).toThrow()
     })
 
     it('should fail if the requested states are in the wrong order', () => {
@@ -121,7 +121,7 @@ describe('alarmHistory', () => {
       modifyEvent.detail.previousState.value = "ALARM";
       modifyEvent.detail.previousState.timestamp = "2019-01-01T00:02:30.000Z";
 
-      expect(() => secondsBetweenPreviouseState(modifyEvent, AlarmState.OK, AlarmState.ALARM)).toThrow()
+      expect(() => secondsBetweenPreviouseState(modifyEvent)).toThrow()
     })
 
   })

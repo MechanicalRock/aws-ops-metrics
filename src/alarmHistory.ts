@@ -57,8 +57,10 @@ export function secondsBetweenFromHistory(alarmHistory: DescribeAlarmHistoryOutp
   }
 }
 
-export function secondsBetweenPreviouseState(event: CloudwatchStateChangeEvent, newState: AlarmState, oldState: AlarmState):
+export function secondsBetweenPreviouseState(event: CloudwatchStateChangeEvent):
   number {
+  const newState = event.detail.state.value;
+  const oldState = event.detail.previousState.value;
   try {
     const newStateDate = new Date(event.detail.state.timestamp);
     const oldStateDate = new Date(event.detail.previousState.timestamp);

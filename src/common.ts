@@ -67,11 +67,8 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
     const service = alarmNameFromAlarmEvent(event);
     let duration = 0;
     try {
-      console.log("previous state is:", event.detail.previousState.value);
-      console.log("Old state is:", oldState);
       if (event.detail.previousState.value === oldState.toString()) {
-        console.log("here");
-        duration = secondsBetweenPreviouseState(event, newState, oldState);
+        duration = secondsBetweenPreviouseState(event);
       }
       else {
         const alarmHistory = await cw.describeAlarmHistory({
