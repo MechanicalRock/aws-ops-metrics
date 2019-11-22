@@ -6,8 +6,6 @@ import { handler as mttf } from "../../src/mttf";
 import { handler as mttr } from "../../src/mttr";
 import { CloudwatchStateChangeEvent } from '../../src/common';
 
-// const AWS = require("aws-sdk-mock");
-
 const feature = loadFeature("./features/lambda-metrics.feature");
 
 defineFeature(feature, (test) => {

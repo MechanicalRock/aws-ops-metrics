@@ -16,31 +16,3 @@ export function alarmNameFromAlarmEvent(event: CloudwatchStateChangeEvent): stri
   return event.detail.alarmName || "unknown";
 }
 
-export interface ICloudWatchAlarmNotificationMessage {
-  AlarmName: string;
-  AlarmDescription: string;
-  AWSAccountId: string;
-  NewStateValue: string;
-  NewStateReason: string;
-  StateChangeTime: string;
-  Region: string;
-  OldStateValue: string;
-  Trigger:
-  {
-    MetricName: string,
-    Namespace: string,
-    StatisticType: string,
-    Statistic: string,
-    Unit: any,
-    Dimensions: Array<{
-      value: string,
-      name: string,
-    }>,
-    Period: number,
-    EvaluationPeriods: number,
-    ComparisonOperator: string,
-    Threshold: number,
-    TreatMissingData: string,
-    EvaluateLowSampleCountPercentile: string,
-  };
-}
