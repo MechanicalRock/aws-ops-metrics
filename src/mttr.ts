@@ -1,8 +1,7 @@
-import { SNSEvent } from "aws-lambda";
 import { AlarmState } from "./alarmHistory";
-import { calculateMetric } from "./common";
+import { calculateMetric, CloudwatchStateChangeEvent } from "./common";
 
-export async function handler(event: SNSEvent) {
+export async function handler(event: CloudwatchStateChangeEvent) {
 
   const metric = calculateMetric("MTTR", AlarmState.OK, AlarmState.ALARM);
 

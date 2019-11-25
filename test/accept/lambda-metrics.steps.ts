@@ -1,12 +1,10 @@
 import * as AWS from "aws-sdk-mock";
 import { AlarmHistoryItem, AlarmHistoryItems } from "aws-sdk/clients/cloudwatch";
 import { defineFeature, loadFeature } from "jest-cucumber";
-import { ICloudWatchAlarmNotificationMessage } from "../../src/cloudwatchAlarmSnsEvent";
 import { handler as mtbf } from "../../src/mtbf";
 import { handler as mttf } from "../../src/mttf";
 import { handler as mttr } from "../../src/mttr";
-
-// const AWS = require("aws-sdk-mock");
+import { CloudwatchStateChangeEvent } from '../../src/common';
 
 const feature = loadFeature("./features/lambda-metrics.feature");
 
@@ -144,43 +142,46 @@ defineFeature(feature, (test) => {
       // alarmHistory is returned in descending order
       alarmHistory.unshift(item);
 
-      const snsNotificationMessage: Partial<ICloudWatchAlarmNotificationMessage> = {
-        AlarmName: alarmName,
-        NewStateValue: newState,
-        OldStateValue: prevState,
-        StateChangeTime: time,
-      };
+      const alarmDetail = {
+        alarmName: alarmName,
+        state:
+        {
+          value: newState,
+          reason: 'Threshold Crossed: 1 out of the last 1 datapoints [2.0 (18/11/19 07:02:00)] was greater than the threshold (0.0) (minimum 1 datapoint for OK -> ALARM transition).',
+          reasonData: '{"version":"1.0","queryDate":"2019-11-18T07:03:51.700+0000","startDate":"2019-11-18T07:02:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[2.0],"threshold":0.0}',
+          timestamp: time
+        },
+        previousState:
+        {
+          value: 'INSUFFICIENT_DATA',
+          reason: 'Threshold Crossed: 1 out of the last 1 datapoints [0.0 (18/11/19 06:56:00)] was not greater than the threshold (0.0) (minimum 1 datapoint for ALARM -> OK transition).',
+          reasonData: '{"version":"1.0","queryDate":"2019-11-18T06:57:51.670+0000","startDate":"2019-11-18T06:56:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[0.0],"threshold":0.0}',
+          timestamp: '2019-11-18T06:57:51.679+0000'
+        },
+        configuration:
+        {
+          description: 'Example alarm for a flaky service - demonstrate capturing metrics based on alarms.'
+        }
+      }
+
       //tslint:disable
-      const mockSnsEvent = {
-        Records: [
-          {
-            EventSource: "aws:sns",
-            EventVersion: "1.0",
-            EventSubscriptionArn:
-              "arn:aws:sns:eu-west-1:000000000000:cloudwatch-alarms:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-            Sns: {
-              Type: "Notification",
-              MessageId: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-              TopicArn: "arn:aws:sns:eu-west-1:000000000000:cloudwatch-alarms",
-              Subject: "ALARM: \"Example alarm name\" in EU - Ireland",
-              Message: JSON.stringify(snsNotificationMessage),
-              Timestamp: "2017-01-12T16:30:42.318Z",
-              SignatureVersion: "1",
-              Signature: "Cg==",
-              SigningCertUrl:
-                "https://sns.eu-west-1.amazonaws.com/SimpleNotificationService-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.pem",
-              UnsubscribeUrl:
-                "https://sns.eu-west-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-west-1:000000000000:cloudwatch-alarms:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-              MessageAttributes: {},
-            },
-          },
-        ],
+      const mockCloudwatchEvent: CloudwatchStateChangeEvent = {
+        version: '0',
+        id: 'abcdfgh-7edc-a164-554c-hhggssttdd',
+        'detail-type': 'CloudWatch Alarm State Change',
+        source: 'aws.cloudwatch',
+        account: '12345',
+        time: '2019-11-18T07:03:51Z',
+        region: 'ap-southeast-2',
+        resources:
+          ['arn:aws:cloudwatch:ap-southeast-2:12345:alarm:flaky-service'],
+        detail: alarmDetail
       };
 
       // simulate all the functions receiving the event
-      await mttf(mockSnsEvent);
-      await mttr(mockSnsEvent);
-      await mtbf(mockSnsEvent);
+      await mttf(mockCloudwatchEvent);
+      await mttr(mockCloudwatchEvent);
+      await mtbf(mockCloudwatchEvent);
 
     });
   }
