@@ -49,11 +49,11 @@ describe('alarmHistory', () => {
       "id": "d0926dec-1b81-ee8e-dc07-769e3f0ba5e9",
       "detail-type": "CloudWatch Alarm State Change",
       "source": "aws.cloudwatch",
-      "account": "516453972500",
+      "account": "12345",
       "time": "2019-11-21T04:18:51Z",
       "region": "ap-southeast-2",
       "resources": [
-        "arn:aws:cloudwatch:ap-southeast-2:516453972500:alarm:flaky-service"
+        "arn:aws:cloudwatch:ap-southeast-2:12345:alarm:flaky-service"
       ],
       "detail": {
         "alarmName": "flaky-service",

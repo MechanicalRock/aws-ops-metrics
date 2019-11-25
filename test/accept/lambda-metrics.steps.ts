@@ -167,14 +167,14 @@ defineFeature(feature, (test) => {
       //tslint:disable
       const mockCloudwatchEvent: CloudwatchStateChangeEvent = {
         version: '0',
-        id: '9f26d3d9-7edc-a164-554c-ccdc4e99b283',
+        id: 'abcdfgh-7edc-a164-554c-hhggssttdd',
         'detail-type': 'CloudWatch Alarm State Change',
         source: 'aws.cloudwatch',
-        account: '516453972500',
+        account: '12345',
         time: '2019-11-18T07:03:51Z',
         region: 'ap-southeast-2',
         resources:
-          ['arn:aws:cloudwatch:ap-southeast-2:516453972500:alarm:flaky-service'],
+          ['arn:aws:cloudwatch:ap-southeast-2:12345:alarm:flaky-service'],
         detail: alarmDetail
       };
 
