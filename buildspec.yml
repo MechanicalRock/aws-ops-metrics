@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12
+      python: 3.7
+    commands:
+      - pip install --user aws-sam-cli
+      - npm install
+  build:
+    commands:
+      - npm test
+      - sam package --template-file template.yml --s3-bucket ${STAGING_BUCKET_PREFIX}-${AWS_REGION} --output-template-file .out/packaged.yaml
+  post_build:
+    commands:
+      - sam publish --template .out/packaged.yaml --region ${AWS_REGION}

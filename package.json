@@ -8,6 +8,8 @@
     "clean": "rm -rf .build",
     "ci:upgrade-dependencies": "./upgrade-dependencies.sh",
     "dependency:upgrade": "npm upgrade --latest",
+    "create-codebuild": "aws cloudformation create-stack --region us-east-1 --stack-name ops-metrics-codebuild --template-body file://codebuild.yml --capabilities CAPABILITY_NAMED_IAM ",
+    "update-codebuild": "aws cloudformation update-stack --region us-east-1 --stack-name ops-metrics-codebuild --template-body file://codebuild.yml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=GitHubToken,UsePreviousValue=true",
     "deploy:dev": "serverless deploy --stage dev",
     "delete:dev": "serverless remove --stage dev",
     "lint": "eslint .",

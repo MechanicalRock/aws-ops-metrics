@@ -11,7 +11,7 @@ Common metrics for monitoring operational health are **MTTR** (Mean Time To Reco
 
 But how do you identify your services and generate the metrics?  One way in AWS is to use Cloud Watch Alarms.  If something is worth alerting on, it is worth capturing metrics.  The configuration of your Cloud Watch Alarms also captures logic for when you consider a failure to have occurred: an isolated error may not be considered a failure - but a few in succession indicates a problem.
 
-This implementation uses CloudWatch Alarms history to calculate metrics.  The information contained within the history provides the context requried to calcaulate MTTR, MTTF and MTBF.  
+This implementation uses CloudWatch Alarms history to calculate metrics.  The information contained within the history provides the context requried to calcaulate MTTR, MTTF and MTBF.
 
 This implementation is limited to the [14 day retention](https://aws.amazon.com/cloudwatch/faqs/) period for CloudWatch Alarms. For a longer retention period, CloudWatch Alarms History would need to be stored separately, e.g. DynamoDB
 
@@ -42,12 +42,12 @@ FlakyServiceAlarm:
         Dimensions:
           - Name: "FunctionName"
             Value: "${self:custom.flakyFunctionName}"
-        
+
         # What to measure
         Statistic: "Sum"
         Period: 60
         Unit: Seconds
-        
+
         # When to alarm
         TreatMissingData: "missing"
         ComparisonOperator: GreaterThanThreshold
@@ -135,7 +135,8 @@ docker-compose run --rm dev-env
 Deploy the project:
 
 ```
-export AWS_PROFILE=my_profile
-npm install
-npm run deploy:dev
+- export AWS_PROFILE=my-profile
+- npm install
+- npm run create-codebuild
+
 ```

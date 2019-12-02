@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Create service-health-metrics based on cloudwatch alarms.'
+
+Resources:
+  DescribeAlarmPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: cloudwatch:DescribeAlarmHistory
+            Resource: '*'
+
+  MTTREventHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Create CloudWatch mttr metric from cloudwatch alarm events
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: src/mttr.ts
+      Events:
+        cloudwatchEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - "aws.cloudwatch"
+              detail-type:
+                - "CloudWatch Alarm State Change"
+      Policies:
+      - CloudWatchPutMetricPolicy: {}
+      - !Ref DescribeAlarmPolicy
+
+  MTBFEventHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Create CloudWatch mtbf metric from cloudwatch alarm events
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: src/mtbf.ts
+      Events:
+        cloudwatchEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - "aws.cloudwatch"
+              detail-type:
+                - "CloudWatch Alarm State Change"
+      Policies:
+      - CloudWatchPutMetricPolicy: {}
+      - !Ref DescribeAlarmPolicy
+
+  MTTFEventHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Create CloudWatch mttf metric from cloudwatch alarm events
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: src/mttf.ts
+      Events:
+        cloudwatchEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - "aws.cloudwatch"
+              detail-type:
+                - "CloudWatch Alarm State Change"
+      Policies:
+      - CloudWatchPutMetricPolicy: {}
+      - !Ref DescribeAlarmPolicy
