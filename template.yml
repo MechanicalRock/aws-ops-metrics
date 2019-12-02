@@ -2,7 +2,21 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: 'Create service-health-metrics based on cloudwatch alarms.'
 
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: mechanicalrock-ops-metrics
+    Description: Creating service-health-metrics based on cloudwatch alarms.
+    Author: mechanicalrock
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['metrics','mttr','mtbf']
+    HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
+
 Resources:
+
   DescribeAlarmPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
