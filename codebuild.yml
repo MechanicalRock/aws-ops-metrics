@@ -41,8 +41,10 @@ Resources:
             Statement:
               - Action:
                   - serverlessrepo:CreateApplication
+                  - serverlessrepo:CreateApplicationVersion
                   - serverlessrepo:UpdateApplication
                   - serverlessrepo:DeleteApplication
+                  - serverlessrepo:ListApplicationVersions
                 Resource: !Sub arn:aws:serverlessrepo:${AWS::Region}:${AWS::AccountId}:applications/*
                 Effect: Allow
               - Action:
