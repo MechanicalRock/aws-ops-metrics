@@ -1,6 +1,6 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Description: 'Create service-health-metrics based on cloudwatch alarms.'
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: "Create service-health-metrics based on cloudwatch alarms."
 
 Metadata:
   AWS::ServerlessRepo::Application:
@@ -10,13 +10,12 @@ Metadata:
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE
     ReadmeUrl: README.md
-    Labels: ['metrics','mttr','mtbf']
+    Labels: ["metrics", "mttr", "mtbf"]
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.0.1
+    SemanticVersion: 1.0.2
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Resources:
-
   DescribeAlarmPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -25,10 +24,10 @@ Resources:
         Statement:
           - Effect: Allow
             Action: cloudwatch:DescribeAlarmHistory
-            Resource: '*'
+            Resource: "*"
 
   MTTREventHandler:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       Description: Create CloudWatch mttr metric from cloudwatch alarm events
       Handler: mttr.handler
@@ -44,11 +43,11 @@ Resources:
               detail-type:
                 - "CloudWatch Alarm State Change"
       Policies:
-      - CloudWatchPutMetricPolicy: {}
-      - !Ref DescribeAlarmPolicy
+        - CloudWatchPutMetricPolicy: {}
+        - !Ref DescribeAlarmPolicy
 
   MTBFEventHandler:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       Description: Create CloudWatch mtbf metric from cloudwatch alarm events
       Handler: mtbf.handler
@@ -64,11 +63,11 @@ Resources:
               detail-type:
                 - "CloudWatch Alarm State Change"
       Policies:
-      - CloudWatchPutMetricPolicy: {}
-      - !Ref DescribeAlarmPolicy
+        - CloudWatchPutMetricPolicy: {}
+        - !Ref DescribeAlarmPolicy
 
   MTTFEventHandler:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       Description: Create CloudWatch mttf metric from cloudwatch alarm events
       Handler: mttf.handler
@@ -84,5 +83,5 @@ Resources:
               detail-type:
                 - "CloudWatch Alarm State Change"
       Policies:
-      - CloudWatchPutMetricPolicy: {}
-      - !Ref DescribeAlarmPolicy
+        - CloudWatchPutMetricPolicy: {}
+        - !Ref DescribeAlarmPolicy
