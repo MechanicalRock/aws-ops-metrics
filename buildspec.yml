@@ -15,6 +15,8 @@ phases:
       - sam --version
       - mkdir .out
       - sam package --template-file template.yml --s3-bucket ${STAGING_BUCKET_PREFIX}-${AWS_REGION} --output-template-file .out/packaged.yaml
+      # FIXME - parse the version from the package.json
+      - aws s3 cp .out/packaged.yml s3://${STAGING_BUCKET_PREFIX}-${AWS_REGION}/v1.0.1/template.yml
   post_build:
     commands:
       - sam publish --template .out/packaged.yaml --region ${AWS_REGION}
