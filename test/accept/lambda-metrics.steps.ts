@@ -10,12 +10,13 @@ const feature = loadFeature("./features/lambda-metrics.feature");
 
 defineFeature(feature, (test) => {
 
-  const alarmHistory: AlarmHistoryItems = [];
+  let alarmHistory: AlarmHistoryItems;
   let alarmName;
-  const cloudWatchSpy = jest.fn().mockReturnValue({});
+  let cloudWatchSpy;
 
   beforeEach(async () => {
-
+    cloudWatchSpy = jest.fn().mockReturnValue({});
+    alarmHistory = []
     AWS.mock("CloudWatch", "putMetricData", (params, callback) => {
       callback(null, cloudWatchSpy(params));
     });
@@ -43,6 +44,15 @@ defineFeature(feature, (test) => {
     whenCloudWatchAlarmStateChanges(when);
 
     thenCloudWatchMetricShouldBeGenerated(then);
+  });
+
+  test('Service is still healthy', ({ given, when, then }) => {
+    givenCloudWatchAlarmHasHistory(given);
+
+    whenCloudWatchAlarmStateChanges(when);
+
+    thenCloudWatchMetricShouldNotBeGenerated(then);
+
   });
 
   test("Service Fails Again", ({ given, when, then }) => {
@@ -94,9 +104,9 @@ defineFeature(feature, (test) => {
         };
 
         // alarmHistory is returned in descending order
-        alarmHistory.unshift(item);
+        // in feature files you need to list items in desc order
+        alarmHistory.push(item)
       });
-
       AWS.mock("CloudWatch", "describeAlarmHistory", alarmHistoryResp);
     });
 
@@ -192,6 +202,12 @@ defineFeature(feature, (test) => {
       const expectedTsStr = expected.MetricData[0].Timestamp;
       expected.MetricData[0].Timestamp = new Date(expectedTsStr);
       expect(cloudWatchSpy).toBeCalledWith(expected);
+    });
+  }
+
+  function thenCloudWatchMetricShouldNotBeGenerated(then) {
+    then("It should not generate any metrics", () => {
+      expect(cloudWatchSpy).not.toBeCalled();
     });
   }
 

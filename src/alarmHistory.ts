@@ -29,6 +29,23 @@ interface IHistoryDataType {
     },
   };
 }
+export function hasStateChanged(alarmHistory: DescribeAlarmHistoryOutput) {
+  let items = alarmHistory.AlarmHistoryItems || [];
+  let itemsWithoutInsufficientData = items.filter(item => item.HistoryItemType === "StateUpdate" && item.HistoryData && !itemHasState(item.HistoryData, AlarmState.INSUFFICIENT_DATA));
+
+
+  const noValidStateChanges = itemsWithoutInsufficientData.length < 2
+  if (noValidStateChanges) {
+    return false
+  }
+
+  const newState = getState(itemsWithoutInsufficientData[0].HistoryData);
+  const prevState = getState(itemsWithoutInsufficientData[1].HistoryData);
+  if (newState !== prevState) {
+    return true;
+  }
+  return false;
+}
 
 export function secondsBetweenFromHistory(alarmHistory: DescribeAlarmHistoryOutput, newState: AlarmState, oldState: AlarmState):
   number {
@@ -87,13 +104,18 @@ function removeFirst(items: AlarmHistoryItems, state: AlarmState) {
   return items.filter((_, i) => i !== idx);
 }
 
-export function itemHasState(historyDataStr: string, state: AlarmState) {
-  const historyData: Partial<IHistoryDataType> = JSON.parse(historyDataStr) as IHistoryDataType;
+export function getState(historyDataStr: string | undefined): string {
+  const historyData: Partial<IHistoryDataType> = JSON.parse(historyDataStr || "{}") as IHistoryDataType;
   if (historyData.newState && historyData.newState.stateValue) {
-    return historyData.newState.stateValue === state.toString();
+    return historyData.newState.stateValue
   } else {
     console.debug(
       console.info(`Item state not found in item: ${historyData}`));
-    return false;
+    return "unknown";
   }
+}
+
+export function itemHasState(historyDataStr: string, state: AlarmState) {
+  const newState = getState(historyDataStr);
+  return newState === state.toString();
 }

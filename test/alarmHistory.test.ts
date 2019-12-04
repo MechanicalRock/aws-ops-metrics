@@ -1,4 +1,4 @@
-import { secondsBetweenFromHistory, secondsBetweenPreviouseState, AlarmState } from '../src/alarmHistory'
+import { secondsBetweenFromHistory, secondsBetweenPreviouseState, AlarmState, hasStateChanged } from '../src/alarmHistory'
 import { DescribeAlarmHistoryOutput } from 'aws-sdk/clients/cloudwatch';
 import { CloudwatchStateChangeEvent } from '../src/common';
 
@@ -124,6 +124,87 @@ describe('alarmHistory', () => {
       expect(() => secondsBetweenPreviouseState(modifyEvent)).toThrow()
     })
 
+  })
+
+  describe('#hasStateChanged()', () => {
+
+    it('should return false when old and new states are the same', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(false)
+    });
+
+    it('should return true when old and new states are different', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(true)
+    })
+
+    it('should ignore INSUFFICIENT_DATA - same state', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(false)
+    })
+
+    it('should ignore INSUFFICIENT_DATA - different state', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(true)
+    })
+
+    it('state changed to INSUFFICIENT_DATA', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.OK),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(true);
+    })
+    it('state changed to INSUFFICIENT_DATA', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:02:30.000Z", AlarmState.INSUFFICIENT_DATA),
+        stateUpdate("2019-01-01T00:01:30.000Z", AlarmState.ALARM),
+        stateUpdate("2019-01-01T00:00:30.000Z", AlarmState.ALARM))
+
+      expect(hasStateChanged(output)).toBe(false);
+    })
+
+    it('should return false if no data available', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.INSUFFICIENT_DATA))
+
+      expect(hasStateChanged(output)).toBe(false)
+    })
+
+    it('should return false if the state has not changed between two valid states', () => {
+      const output = describeAlarmHistory(
+        stateUpdate("2019-01-01T00:03:30.000Z", AlarmState.OK))
+
+      expect(hasStateChanged(output)).toBe(false)
+    })
   })
 })
 

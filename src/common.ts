@@ -1,5 +1,5 @@
 import { CloudWatch } from "aws-sdk";
-import { AlarmState, secondsBetweenFromHistory, secondsBetweenPreviouseState } from "./alarmHistory";
+import { AlarmState, secondsBetweenFromHistory, secondsBetweenPreviouseState, hasStateChanged } from "./alarmHistory";
 import {
   alarmNameFromAlarmEvent, isAlarmEventForState,
   metricTimestampFromAlarmEvent,
@@ -75,6 +75,9 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
           AlarmName: service,
           HistoryItemType: "StateUpdate",
         }).promise();
+        if (!hasStateChanged(alarmHistory)) {
+          return {};
+        }
         duration = secondsBetweenFromHistory(alarmHistory, newState, oldState);
       }
 
