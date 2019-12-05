@@ -64,6 +64,24 @@ defineFeature(feature, (test) => {
 
   });
 
+  test('no-data/state change for extended period', ({ given, when, then }) => {
+
+    givenCloudWatchAlarmHasHistory(given);
+
+    whenCloudWatchAlarmStateChanges(when);
+
+    thenCloudWatchMetricShouldBeGenerated(then);
+  });
+
+  test('Service Restored - ignoring Insufficient', ({ given, when, then }) => {
+
+    givenCloudWatchAlarmHasHistory(given);
+
+    whenCloudWatchAlarmStateChanges(when);
+
+    thenCloudWatchMetricShouldBeGenerated(then);
+  });
+
   function givenCloudWatchAlarmHasHistory(given) {
     given(/^CloudWatch alarm "(.*)" has the following history:$/, (name, table) => {
       alarmName = name;

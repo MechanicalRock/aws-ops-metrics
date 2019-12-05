@@ -14,6 +14,10 @@ Feature: Lambda Metrics
   - Dimensions:
   - service name (based on alarm)
 
+  - Metrics should be calculted between unique states
+  -  Alarm state will never be reported the same twice in a row (not a change)
+  - INSUFFICIENT_DATA should be ignored
+
   Scenario: Service Fails
     Given CloudWatch alarm "foo" has the following history:
       | date                     | state | oldSate           |
@@ -96,6 +100,64 @@ Feature: Lambda Metrics
             ],
             "Timestamp": "2019-01-01T02:01:30.000Z",
             "Value": 7200,
+            "Unit": "Seconds"
+          }
+        ],
+        "Namespace": "Operations"
+      }
+      """
+
+  Scenario: no-data/state change for extended period
+    Given CloudWatch alarm "foo" has the following history:
+      | date                     | state             | oldSate           |
+      | 2019-01-01T00:04:30.000Z | INSUFFICIENT_DATA | ALARM             |
+      | 2019-01-01T00:03:30.000Z | ALARM             | INSUFFICIENT_DATA |
+      | 2019-01-01T00:02:30.000Z | INSUFFICIENT_DATA | ALARM             |
+      | 2019-01-01T00:01:30.000Z | ALARM             | INSUFFICIENT_DATA |
+    When CloudWatch alarm state changes to OK at "2019-01-01T00:05:30.000Z"
+    Then the following CloudWatch metric should be generated:
+      # 4 Minutes
+      """
+      {
+        "MetricData": [
+          {
+            "MetricName": "MTTR",
+            "Dimensions": [
+              {
+                "Name": "service",
+                "Value": "foo"
+              }
+            ],
+            "Timestamp": "2019-01-01T00:05:30.000Z",
+            "Value": 240,
+            "Unit": "Seconds"
+          }
+        ],
+        "Namespace": "Operations"
+      }
+      """
+
+  Scenario: Service Restored - ignoring Insufficient
+    Given CloudWatch alarm "foo" has the following history:
+      | date                     | state             | oldSate           |
+      | 2019-01-01T00:02:30.000Z | INSUFFICIENT_DATA | ALARM             |
+      | 2019-01-01T00:01:30.000Z | ALARM             | OK                |
+      | 2019-01-01T00:00:00.000Z | OK                | INSUFFICIENT_DATA |
+    When CloudWatch alarm state changes to OK at "2019-01-01T01:01:30.000Z"
+    Then the following CloudWatch metric should be generated:
+      """
+      {
+        "MetricData": [
+          {
+            "MetricName": "MTTR",
+            "Dimensions": [
+              {
+                "Name": "service",
+                "Value": "foo"
+              }
+            ],
+            "Timestamp": "2019-01-01T01:01:30.000Z",
+            "Value": 3600,
             "Unit": "Seconds"
           }
         ],

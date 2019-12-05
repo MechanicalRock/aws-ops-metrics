@@ -1,5 +1,5 @@
 import { CloudWatch } from "aws-sdk";
-import { AlarmState, secondsBetweenFromHistory, secondsBetweenPreviouseState, hasStateChanged } from "./alarmHistory";
+import { AlarmState, secondsBetweenFromHistory, hasStateChanged } from "./alarmHistory";
 import {
   alarmNameFromAlarmEvent, isAlarmEventForState,
   metricTimestampFromAlarmEvent,
@@ -59,7 +59,7 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
     console.debug("Event received: " + JSON.stringify(event));
 
     if (!isAlarmEventForState(event, newState)) {
-      console.debug(`State '${newState}' not metched for event.  Ignoring`);
+      console.debug(`State '${newState}' not matched for event. Ignoring`);
       return {};
     }
 
@@ -67,19 +67,15 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
     const service = alarmNameFromAlarmEvent(event);
     let duration = 0;
     try {
-      if (event.detail.previousState.value === oldState.toString()) {
-        duration = secondsBetweenPreviouseState(event);
+      const alarmHistory = await cw.describeAlarmHistory({
+        AlarmName: service,
+        HistoryItemType: "StateUpdate",
+      }).promise();
+      if (!hasStateChanged(alarmHistory)) {
+        return {};
       }
-      else {
-        const alarmHistory = await cw.describeAlarmHistory({
-          AlarmName: service,
-          HistoryItemType: "StateUpdate",
-        }).promise();
-        if (!hasStateChanged(alarmHistory)) {
-          return {};
-        }
-        duration = secondsBetweenFromHistory(alarmHistory, newState, oldState);
-      }
+      duration = secondsBetweenFromHistory(alarmHistory, newState, oldState);
+      console.info(`Publishing ${metric}: ${duration}`);
 
       await cw.putMetricData({
         MetricData: [

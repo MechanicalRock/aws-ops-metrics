@@ -1,5 +1,4 @@
-import { AlarmHistoryItems, DescribeAlarmHistoryOutput } from "aws-sdk/clients/cloudwatch";
-import { CloudwatchStateChangeEvent } from './common';
+import { AlarmHistoryItems, DescribeAlarmHistoryOutput, AlarmHistoryItem } from "aws-sdk/clients/cloudwatch";
 
 export enum AlarmState {
   OK = "OK",
@@ -52,29 +51,15 @@ export function secondsBetweenFromHistory(alarmHistory: DescribeAlarmHistoryOutp
   let items = alarmHistory.AlarmHistoryItems || [];
 
   try {
-    const newStateDate = dateOfFirst(items, newState);
+    const newStateDate = dateOfFirstUnique(items, newState);
     if (newState === oldState) {
       items = removeFirst(items, newState);
     }
-    const oldStateDate = dateOfFirst(items, oldState);
+    const oldStateDate = dateOfFirstUnique(items, oldState);
     const diff = calculateTheDifference(newStateDate, oldStateDate);
     return diff;
   } catch (err) {
     throw new Error(`No alarms found in order: [${newState}, ${oldState}] in ${JSON.stringify(alarmHistory)}`);
-  }
-}
-
-export function secondsBetweenPreviouseState(event: CloudwatchStateChangeEvent):
-  number {
-  const newState = event.detail.state.value;
-  const oldState = event.detail.previousState.value;
-  try {
-    const newStateDate = new Date(event.detail.state.timestamp);
-    const oldStateDate = new Date(event.detail.previousState.timestamp);
-    const diff = calculateTheDifference(newStateDate, oldStateDate);
-    return diff;
-  } catch (err) {
-    throw new Error(`Failed to calculate the difference between: [new: ${newState}, old:${oldState}] in ${JSON.stringify(event)}`);
   }
 }
 
@@ -93,9 +78,29 @@ function calculateTheDifference(newStateDate: Date, oldStateDate: Date): number 
 
 const by = (state) => (item) => item.HistoryItemType === "StateUpdate" && itemHasState(item.HistoryData, state);
 
-function dateOfFirst(items, state) {
-  const stateItem = items.find(by(state));
-  return new Date(stateItem.Timestamp);
+function dateOfFirstUnique(items: AlarmHistoryItems, state: AlarmState) {
+  const firstUniqueState = (current: AlarmHistoryItem, index: number, all: AlarmHistoryItems) => {
+    const currentState = getState(current.HistoryData);
+    const expectedStateStr = state.toString();
+    if (index == all.length - 1) {
+      return currentState === expectedStateStr
+    }
+    if (currentState !== expectedStateStr) {
+      return false
+    }
+    if (currentState === getState(all[index + 1].HistoryData)) {
+      return false
+    }
+    return true
+  }
+
+  let itemsWithoutInsufficientData = items.filter(item => item.HistoryItemType === "StateUpdate" && item.HistoryData && !itemHasState(item.HistoryData, AlarmState.INSUFFICIENT_DATA));
+  const found: AlarmHistoryItem | undefined = itemsWithoutInsufficientData.find(firstUniqueState);
+  if (found && found.Timestamp) {
+    return new Date(found.Timestamp);
+  }
+
+  throw new Error(`State ${state} was not found ${JSON.stringify(items)}`);
 }
 
 function removeFirst(items: AlarmHistoryItems, state: AlarmState) {
