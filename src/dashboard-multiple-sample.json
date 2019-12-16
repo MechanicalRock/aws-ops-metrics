@@ -1,0 +1,425 @@
+{
+  "start": "-P42D",
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 8,
+      "height": 4,
+      "properties": {
+        "markdown": "\n### MTTR\nMean time to recovery.  **Lower = better**\n\nWhen a failure occurs, how quickly is service restored.\n\nWhen the system fails, the team should \"stop the line\" and swarm to fix it.\n"
+      }
+    },
+    {
+      "type": "text",
+      "x": 8,
+      "y": 0,
+      "width": 8,
+      "height": 4,
+      "properties": {
+        "markdown": "\n### MTBF\nMean time between failures.  **Higher = better**\n\nMTBF describes system stability.  How often does the service fail.\n\nAn unstable system suggests systemic quality/resiliency issues that needs to be addressed.\n"
+      }
+    },
+    {
+      "type": "text",
+      "x": 16,
+      "y": 0,
+      "width": 8,
+      "height": 4,
+      "properties": {
+        "markdown": "\n### MTTF\nMean time to failure.  **Higher = better**\n\nHow stable/available is the system.\n\nA low MTTF indicates that the system if often unavailable.\n\nImprove availability by improving system resiliency.  Reduce planned outages using staged deployment, such as blue/green or canary releasing.\n"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 4,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "FILL(m1/3600,AVG(m1/3600))",
+              "id": "e2",
+              "region": "ap-southeast-2",
+              "label": "flaky-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTR",
+            "service",
+            "flaky-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ],
+          [
+            {
+              "expression": "FILL(m1/3600,AVG(m1/3600))",
+              "id": "e2",
+              "region": "ap-southeast-2",
+              "label": "stable-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTR",
+            "service",
+            "stable-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "region": "ap-southeast-2",
+        "title": "MTTR Trend",
+        "period": 86400,
+        "stacked": false,
+        "yAxis": {
+          "left": {
+            "label": "hours",
+            "showUnits": false,
+            "min": 0
+          },
+          "right": {
+            "showUnits": true
+          }
+        },
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#98df8a",
+              "label": "< 1 hours",
+              "value": 1,
+              "fill": "below"
+            },
+            [
+              {
+                "color": "#ffbb78",
+                "label": "> 1 hours",
+                "value": 1
+              },
+              {
+                "value": 12,
+                "label": "< 0.5 day"
+              }
+            ],
+            {
+              "color": "#d62728",
+              "label": "> 0.5 day",
+              "value": 12,
+              "fill": "above"
+            }
+          ]
+        },
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 8,
+      "y": 4,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "FILL(m1/86400,AVG(m1/86400))",
+              "label": "flaky-service",
+              "id": "e2",
+              "region": "ap-southeast-2"
+            }
+          ],
+          [
+            "Operations",
+            "MTBF",
+            "service",
+            "flaky-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ],
+          [
+            {
+              "expression": "FILL(m1/86400,AVG(m1/86400))",
+              "label": "stable-service",
+              "id": "e2",
+              "region": "ap-southeast-2"
+            }
+          ],
+          [
+            "Operations",
+            "MTBF",
+            "service",
+            "stable-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "region": "ap-southeast-2",
+        "title": "MTBF Trend",
+        "period": 86400,
+        "stacked": false,
+        "yAxis": {
+          "left": {
+            "label": "days",
+            "showUnits": false,
+            "min": 0
+          },
+          "right": {
+            "showUnits": true
+          }
+        },
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#98df8a",
+              "label": "> 1 week",
+              "value": 7,
+              "fill": "above"
+            },
+            [
+              {
+                "color": "#ffbb78",
+                "label": "< 1 week",
+                "value": 7
+              },
+              {
+                "value": 1,
+                "label": "1 day"
+              }
+            ],
+            {
+              "color": "#d62728",
+              "label": "< 1 day",
+              "value": 1,
+              "fill": "below"
+            }
+          ]
+        },
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16,
+      "y": 4,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "FILL(m1/86400,AVG(m1/86400))",
+              "id": "e2",
+              "region": "ap-southeast-2",
+              "label": "flaky-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTF",
+            "service",
+            "flaky-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ],
+          [
+            {
+              "expression": "FILL(m1/86400,AVG(m1/86400))",
+              "id": "e2",
+              "region": "ap-southeast-2",
+              "label": "stable-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTF",
+            "service",
+            "stable-service",
+            {
+              "stat": "Average",
+              "id": "m1",
+              "visible": false,
+              "period": 604800
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "region": "ap-southeast-2",
+        "title": "MTTF Trend",
+        "period": 86400,
+        "stacked": false,
+        "yAxis": {
+          "left": {
+            "label": "days",
+            "showUnits": false,
+            "min": 0
+          },
+          "right": {
+            "showUnits": true
+          }
+        },
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#98df8a",
+              "label": "> 1 week",
+              "value": 7,
+              "fill": "above"
+            },
+            [
+              {
+                "color": "#ffbb78",
+                "label": "< 1 week",
+                "value": 7
+              },
+              {
+                "value": 1,
+                "label": "1 day"
+              }
+            ],
+            {
+              "color": "#d62728",
+              "label": "< 1 day",
+              "value": 1,
+              "fill": "below"
+            }
+          ]
+        },
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 10,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            "Operations",
+            "MTTR",
+            "service",
+            "flaky-service",
+            {
+              "id": "m1",
+              "label": "flaky-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTR",
+            "service",
+            "stable-service",
+            {
+              "id": "m1",
+              "label": "stable-service"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "region": "ap-southeast-2",
+        "stat": "Average",
+        "period": 604800,
+        "title": "MTTR Average (7d)"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 8,
+      "y": 10,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            "Operations",
+            "MTBF",
+            "service",
+            "flaky-service",
+            {
+              "id": "m1",
+              "label": "flaky-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTBF",
+            "service",
+            "stable-service",
+            {
+              "id": "m1",
+              "label": "stable-service"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "region": "ap-southeast-2",
+        "stat": "Average",
+        "period": 604800,
+        "title": "MTBF Average (7d)"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16,
+      "y": 10,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [
+            "Operations",
+            "MTTF",
+            "service",
+            "flaky-service",
+            {
+              "id": "m1",
+              "label": "flaky-service"
+            }
+          ],
+          [
+            "Operations",
+            "MTTF",
+            "service",
+            "stable-service",
+            {
+              "id": "m1",
+              "label": "stable-service"
+            }
+          ]
+        ],
+        "view": "singleValue",
+        "region": "ap-southeast-2",
+        "stat": "Average",
+        "period": 604800,
+        "title": "MTTF Average (7d)"
+      }
+    }
+  ]
+}
