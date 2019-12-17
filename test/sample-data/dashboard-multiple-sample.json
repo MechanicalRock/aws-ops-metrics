@@ -44,14 +44,14 @@
               "expression": "FILL(m0/3600,AVG(m0/3600))",
               "id": "e0",
               "region": "ap-southeast-2",
-              "label": "flaky-service"
+              "label": "service-0"
             }
           ],
           [
             "Operations",
             "MTTR",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "stat": "Average",
               "id": "m0",
@@ -64,14 +64,14 @@
               "expression": "FILL(m1/3600,AVG(m1/3600))",
               "id": "e1",
               "region": "ap-southeast-2",
-              "label": "stable-service"
+              "label": "service-1"
             }
           ],
           [
             "Operations",
             "MTTR",
             "service",
-            "stable-service",
+            "service-1",
             {
               "stat": "Average",
               "id": "m1",
@@ -136,7 +136,7 @@
           [
             {
               "expression": "FILL(m0/86400,AVG(m0/86400))",
-              "label": "flaky-service",
+              "label": "service-0",
               "id": "e0",
               "region": "ap-southeast-2"
             }
@@ -145,7 +145,7 @@
             "Operations",
             "MTBF",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "stat": "Average",
               "id": "m0",
@@ -156,7 +156,7 @@
           [
             {
               "expression": "FILL(m1/86400,AVG(m1/86400))",
-              "label": "stable-service",
+              "label": "service-1",
               "id": "e1",
               "region": "ap-southeast-2"
             }
@@ -165,7 +165,7 @@
             "Operations",
             "MTBF",
             "service",
-            "stable-service",
+            "service-1",
             {
               "stat": "Average",
               "id": "m1",
@@ -232,14 +232,14 @@
               "expression": "FILL(m0/86400,AVG(m0/86400))",
               "id": "e0",
               "region": "ap-southeast-2",
-              "label": "flaky-service"
+              "label": "service-0"
             }
           ],
           [
             "Operations",
             "MTTF",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "stat": "Average",
               "id": "m0",
@@ -252,14 +252,14 @@
               "expression": "FILL(m1/86400,AVG(m1/86400))",
               "id": "e1",
               "region": "ap-southeast-2",
-              "label": "stable-service"
+              "label": "service-1"
             }
           ],
           [
             "Operations",
             "MTTF",
             "service",
-            "stable-service",
+            "service-1",
             {
               "stat": "Average",
               "id": "m1",
@@ -325,20 +325,20 @@
             "Operations",
             "MTTR",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "id": "m0",
-              "label": "flaky-service"
+              "label": "service-0"
             }
           ],
           [
             "Operations",
             "MTTR",
             "service",
-            "stable-service",
+            "service-1",
             {
               "id": "m1",
-              "label": "stable-service"
+              "label": "service-1"
             }
           ]
         ],
@@ -361,20 +361,20 @@
             "Operations",
             "MTBF",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "id": "m0",
-              "label": "flaky-service"
+              "label": "service-0"
             }
           ],
           [
             "Operations",
             "MTBF",
             "service",
-            "stable-service",
+            "service-1",
             {
               "id": "m1",
-              "label": "stable-service"
+              "label": "service-1"
             }
           ]
         ],
@@ -397,20 +397,20 @@
             "Operations",
             "MTTF",
             "service",
-            "flaky-service",
+            "service-0",
             {
               "id": "m0",
-              "label": "flaky-service"
+              "label": "service-0"
             }
           ],
           [
             "Operations",
             "MTTF",
             "service",
-            "stable-service",
+            "service-1",
             {
               "id": "m1",
-              "label": "stable-service"
+              "label": "service-1"
             }
           ]
         ],

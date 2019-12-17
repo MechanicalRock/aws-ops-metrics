@@ -47,6 +47,13 @@ const applyLimits = (state) => {
   }
 };
 
+function flattenNestedArray(array, thisArray) {
+  if (thisArray) {
+    return [].concat.apply(thisArray, array);
+  }
+  return [].concat.apply([], array);
+}
+
 function trendWidgets(metrics, y, state) {
 
   return state.widgetMappings.map(mapping => {
@@ -77,7 +84,7 @@ function trendWidgets(metrics, y, state) {
       ]
     });
     //flatten the arrays
-    resultMetrics = [].concat.apply([], resultMetrics);
+    resultMetrics = flattenNestedArray(resultMetrics);
 
     return {
       "type": "metric",
@@ -114,8 +121,8 @@ function averageWidgets(metrics, y, state) {
 
   return state.widgetMappings.map(mapping => {
 
-    const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    let resultMetrics = filterredGroup.map((mappingGroup, index) => {
+    const filteredGroup = metrics.filter(x => x.metricName == mapping.label);
+    let resultMetrics = filteredGroup.map((mappingGroup, index) => {
       return [
         "Operations",
         mappingGroup.metricName,
@@ -347,7 +354,7 @@ class DashboardTrendGenerator {
     y += WIDGET_HEIGHT;
 
     // flatten the nested arrays
-    dashboard.widgets = [].concat.apply(dashboard.widgets, widget);
+    dashboard.widgets = flattenNestedArray(widget, dashboard.widgets);
 
     return state.cloudwatch.putDashboard({
       'DashboardName': 'AvailabilityTrends-' + state.region,

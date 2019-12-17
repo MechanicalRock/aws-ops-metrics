@@ -106,68 +106,7 @@ describe("generateDashboardTrend", () => {
       dashboard: "./sample-data/dashboard-multiple-sample.json",
       uniqueServices: 2,
       metrics: {
-        "Metrics": [
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "flaky-service"
-              }
-            ],
-            "MetricName": "MTTR"
-          },
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "flaky-service"
-              }
-            ],
-            "MetricName": "MTTF"
-          },
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "flaky-service"
-              }
-            ],
-            "MetricName": "MTBF"
-          },
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "stable-service"
-              }
-            ],
-            "MetricName": "MTTR"
-          },
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "stable-service"
-              }
-            ],
-            "MetricName": "MTTF"
-          },
-          {
-            "Namespace": "Operations",
-            "Dimensions": [
-              {
-                "Name": "service",
-                "Value": "stable-service"
-              }
-            ],
-            "MetricName": "MTBF"
-          }
-        ]
+        "Metrics": [].concat.apply([], generateMetrics(2))
       },
       event: {
         "account": "123456789012",
