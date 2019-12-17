@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["metrics", "mttr", "mtbf"]
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.0.4
+    SemanticVersion: 1.1.0
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Resources:
@@ -85,3 +85,19 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
+
+  OpsDashboardGenerator:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Build OPS Trend dashboard from CloudWatch metrics
+      Handler: dashboardHandler.generateDashboardTrend
+      Runtime: nodejs12.x
+      CodeUri: .build/src
+      Timeout: 60
+      Events:
+        DashboardEventRule:
+          Type: Schedule
+          Properties:
+            Schedule: "cron(*/5 * * * ? *)"
+      Policies:
+      - CloudWatchDashboardPolicy: {}
