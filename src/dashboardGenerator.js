@@ -52,12 +52,12 @@ function trendWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
     const region = state.region;
     const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    let resultMetrics = filterredGroup.map(mappinggroup => {
+    let resultMetrics = filterredGroup.map((mappinggroup, index) => {
       return [
         [
           {
-            "expression": `FILL(m1/${mapping.unitConversion.unit},AVG(m1/${mapping.unitConversion.unit}))`,
-            "id": "e2",
+            "expression": `FILL(m${index}/${mapping.unitConversion.unit},AVG(m${index}/${mapping.unitConversion.unit}))`,
+            "id": `e${index}`,
             "region": "ap-southeast-2",
             "label": mappinggroup.serviceName
           }
@@ -69,7 +69,7 @@ function trendWidgets(metrics, y, state) {
           mappinggroup.serviceName,
           {
             "stat": "Average",
-            "id": "m1",
+            "id": `m${index}`,
             "visible": false,
             "period": SEVEN_DAYS
           }
@@ -115,14 +115,14 @@ function averageWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
 
     const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    let resultMetrics = filterredGroup.map(mappingGroup => {
+    let resultMetrics = filterredGroup.map((mappingGroup, index) => {
       return [
         "Operations",
         mappingGroup.metricName,
         "service",
         mappingGroup.serviceName,
         {
-          "id": "m1",
+          "id": `m${index}`,
           "label": mappingGroup.serviceName
         }
       ]

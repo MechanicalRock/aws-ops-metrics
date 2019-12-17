@@ -41,8 +41,8 @@
         "metrics": [
           [
             {
-              "expression": "FILL(m1/3600,AVG(m1/3600))",
-              "id": "e2",
+              "expression": "FILL(m0/3600,AVG(m0/3600))",
+              "id": "e0",
               "region": "ap-southeast-2",
               "label": "flaky-service"
             }
@@ -54,7 +54,7 @@
             "flaky-service",
             {
               "stat": "Average",
-              "id": "m1",
+              "id": "m0",
               "visible": false,
               "period": 604800
             }
@@ -115,9 +115,9 @@
         "metrics": [
           [
             {
-              "expression": "FILL(m1/86400,AVG(m1/86400))",
+              "expression": "FILL(m0/86400,AVG(m0/86400))",
               "label": "flaky-service",
-              "id": "e2",
+              "id": "e0",
               "region": "ap-southeast-2"
             }
           ],
@@ -128,7 +128,7 @@
             "flaky-service",
             {
               "stat": "Average",
-              "id": "m1",
+              "id": "m0",
               "visible": false,
               "period": 604800
             }
@@ -189,8 +189,8 @@
         "metrics": [
           [
             {
-              "expression": "FILL(m1/86400,AVG(m1/86400))",
-              "id": "e2",
+              "expression": "FILL(m0/86400,AVG(m0/86400))",
+              "id": "e0",
               "region": "ap-southeast-2",
               "label": "flaky-service"
             }
@@ -202,7 +202,7 @@
             "flaky-service",
             {
               "stat": "Average",
-              "id": "m1",
+              "id": "m0",
               "visible": false,
               "period": 604800
             }
@@ -267,7 +267,7 @@
             "service",
             "flaky-service",
             {
-              "id": "m1",
+              "id": "m0",
               "label": "flaky-service"
             }
           ]
@@ -293,7 +293,7 @@
             "service",
             "flaky-service",
             {
-              "id": "m1",
+              "id": "m0",
               "label": "flaky-service"
             }
           ]
@@ -319,7 +319,7 @@
             "service",
             "flaky-service",
             {
-              "id": "m1",
+              "id": "m0",
               "label": "flaky-service"
             }
           ]
