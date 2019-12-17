@@ -33,15 +33,18 @@ const SEVEN_DAYS = 60 * 60 * 24 * 7;
 
 const applyLimits = (state) => {
   // See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_limits.html
-  const maxMetricsPerDash = 500;
-  const metricsPerWidget = 4;
-  const widgetsPerPipeline = 4;
-  const maxPipelines = Math.floor(maxMetricsPerDash / (metricsPerWidget * widgetsPerPipeline));
+  const maxMetricsPerWidget = 100;
+  const maxMetricsPerServiceInAWidget = 2;
+  const maxServices = Math.floor(maxMetricsPerWidget / maxMetricsPerServiceInAWidget);
 
-  if (state.pipelineNames.length > maxPipelines) {
-    console.warn(`Maximum of ${maxPipelines} allowed in a single dashboard.  Some pipelines will not be reported.`);
+  // For each service there will be three metrics (MTTR, MTBF, MTTF)
+  const maxSupportedMetrics = maxServices * 3;
+
+  if (state.metrics.length > maxSupportedMetrics) {
+    console.warn(`Maximum of ${maxSupportedMetrics} metrics are allowed in a single dashboard. Some metrics will not be reported.`);
+    state.metrics = state.metrics.sort((a, b) => (a.serviceName > b.serviceName) ? 1 : -1);
+    state.metrics = state.metrics.slice(0, maxSupportedMetrics);
   }
-  state.pipelineNames = state.pipelineNames.slice(0, maxPipelines);
 };
 
 function trendWidgets(metrics, y, state) {
@@ -49,7 +52,6 @@ function trendWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
     const region = state.region;
     const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    console.log("Filtered group are: ", filterredGroup);
     let resultMetrics = filterredGroup.map(mappinggroup => {
       return [
         [
@@ -113,7 +115,6 @@ function averageWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
 
     const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    console.log("Filtered group are: ", filterredGroup);
     let resultMetrics = filterredGroup.map(mappingGroup => {
       return [
         "Operations",
@@ -155,8 +156,7 @@ class DashboardTrendGenerator {
 
 
   initializeState(state) {
-    console.log("Initializing State: ", JSON.stringify(state));
-    state.pipelineNames = [];
+    state.metrics = [];
 
     state.widgetMappings = [
       {
@@ -281,9 +281,9 @@ class DashboardTrendGenerator {
           resolve(state);
         } else {
 
-          state.pipelineNames =
+          state.metrics =
             data.Metrics.map(m => m.Dimensions.filter(d => d.Name === 'service').map(d => { return { serviceName: d.Value, metricName: m.MetricName } }))
-              .reduce((a, b) => a.concat(b), state.pipelineNames);
+              .reduce((a, b) => a.concat(b), state.metrics);
         }
       });
 
@@ -292,7 +292,7 @@ class DashboardTrendGenerator {
 
 
   putDashboard(state) {
-    state.pipelineNames = [...new Set(state.pipelineNames)].sort();
+    state.metrics = [...new Set(state.metrics)].sort();
     let y = 0; // leave space for the legend on first row
 
     applyLimits(state);
@@ -342,16 +342,15 @@ class DashboardTrendGenerator {
       x += 8;
     });
     y += TEXT_HEIGHT;
-    console.log("state.pipelines are: ", JSON.stringify(state.pipelineNames));
 
-    let widget = [trendWidgets(state.pipelineNames, y, state)].concat(averageWidgets(state.pipelineNames, y, state));
+    let widget = [trendWidgets(state.metrics, y, state)].concat(averageWidgets(state.metrics, y, state));
     y += WIDGET_HEIGHT;
 
     // flatten the nested arrays
     dashboard.widgets = [].concat.apply(dashboard.widgets, widget);
 
     return state.cloudwatch.putDashboard({
-      'DashboardName': 'availability-metrics-' + state.region,
+      'DashboardName': 'AvailabilityTrends-' + state.region,
       'DashboardBody': JSON.stringify(dashboard)
     }).promise();
   }

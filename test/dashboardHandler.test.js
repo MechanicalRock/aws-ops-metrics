@@ -7,7 +7,7 @@ var sinonChai = require("sinon-chai");
 chai.use(sinonChai);
 var expect = chai.expect;
 var LambdaTester = require('lambda-tester');
-var index = require('./dashboardHandler');
+var index = require('../src/dashboardHandler');
 var sinon = require('sinon');
 
 describe("generateDashboardTrend", () => {
@@ -17,7 +17,7 @@ describe("generateDashboardTrend", () => {
 
   function generateMetrics(n) {
     return [...Array(n).keys()].map(idx => {
-      return {
+      return [{
         "Namespace": "Operations",
         "Dimensions": [
           {
@@ -26,13 +26,34 @@ describe("generateDashboardTrend", () => {
           }
         ],
         "MetricName": "MTTR"
+      },
+      {
+        "Namespace": "Operations",
+        "Dimensions": [
+          {
+            "Name": "service",
+            "Value": `service-${idx}`
+          }
+        ],
+        "MetricName": "MTBF"
+      },
+      {
+        "Namespace": "Operations",
+        "Dimensions": [
+          {
+            "Name": "service",
+            "Value": `service-${idx}`
+          }
+        ],
+        "MetricName": "MTTF"
       }
+      ]
     });
   }
   let scenarios = [
     {
       description: "sample dashboard - single service",
-      dashboard: "./dashboard-sample.json",
+      dashboard: "./sample-data/dashboard-sample.json",
       uniqueServices: 1,
       metrics: {
         "Metrics": [
@@ -82,7 +103,7 @@ describe("generateDashboardTrend", () => {
       }
     }, {
       description: "sample dashboard - multiple service",
-      dashboard: "./dashboard-multiple-sample.json",
+      dashboard: "./sample-data/dashboard-multiple-sample.json",
       uniqueServices: 2,
       metrics: {
         "Metrics": [
@@ -160,108 +181,29 @@ describe("generateDashboardTrend", () => {
           "arn:aws:events:ap-southeast-2:123456789012:rule/my-schedule"
         ]
       }
-    }
-    // {
-    //   description: "single service",
-    //   uniquePipelines: 1,
-    //   metrics: {
-    //     "Metrics": [
-    //       {
-    //         "Namespace": "Operations",
-    //         "Dimensions": [
-    //           {
-    //             "Name": "service",
-    //             "Value": "my-service"
-    //           }
-    //         ],
-    //         "MetricName": "MTTR"
-    //       },
-    //       {
-    //         "Namespace": "Operations",
-    //         "Dimensions": [
-    //           {
-    //             "Name": "service",
-    //             "Value": "MTTF"
-    //           }
-    //         ],
-    //         "MetricName": "SuccessCycleTime"
-    //       },
-    //     ]
-    //   },
-    //   event: {
-    //     "account": "123456789012",
-    //     "region": "ap-southeast-2",
-    //     "detail": {},
-    //     "detail-type": "Scheduled Event",
-    //     "source": "aws.events",
-    //     "time": "2019-03-01T01:23:45Z",
-    //     "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
-    //     "resources": [
-    //       "arn:aws:events:ap-southeast-2:123456789012:rule/my-schedule"
-    //     ]
-    //   }
-    // },
-    // {
-    //   description: "multiple services",
-    //   uniquePipelines: 2,
-    //   metrics: {
-    //     "Metrics": [
-    //       {
-    //         "Namespace": "Operations",
-    //         "Dimensions": [
-    //           {
-    //             "Name": "service",
-    //             "Value": "service-1"
-    //           }
-    //         ],
-    //         "MetricName": "MTBF"
-    //       },
-    //       {
-    //         "Namespace": "Operations",
-    //         "Dimensions": [
-    //           {
-    //             "Name": "service",
-    //             "Value": "service-2"
-    //           }
-    //         ],
-    //         "MetricName": "MTTF"
-    //       },
-    //     ]
-    //   },
-    //   event: {
-    //     "account": "123456789012",
-    //     "region": "ap-southeast-2",
-    //     "detail": {},
-    //     "detail-type": "Scheduled Event",
-    //     "source": "aws.events",
-    //     "time": "2019-03-01T01:23:45Z",
-    //     "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
-    //     "resources": [
-    //       "arn:aws:events:ap-southeast-2:123456789012:rule/my-schedule"
-    //     ]
-    //   }
-    // },
-    // {
-    //   description: "too many pipelines",
-    //   expectTruncated: true,
-    //   uniquePipelines: 3,
+    },
+    {
+      description: "sample dashboard - multiple service",
+      dashboard: "./sample-data/dashboard-multiple-sample.json",
+      uniqueServices: 51,
+      expectTruncated: true,
 
-    //   metrics: {
-    //     "Metrics": generateMetrics(3)
-    //   },
-    //   event: {
-    //     "account": "123456789012",
-    //     "region": "ap-southeast-2",
-    //     "detail": {},
-    //     "detail-type": "Scheduled Event",
-    //     "source": "aws.events",
-    //     "time": "2019-03-01T01:23:45Z",
-    //     "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
-    //     "resources": [
-    //       "arn:aws:events:ap-southeast-2:123456789012:rule/my-schedule"
-    //     ]
-    //   }
-    // }
+      metrics: {
+        "Metrics": [].concat.apply([], generateMetrics(51))
+      },
+      event: {
+        "account": "123456789012",
+        "region": "ap-southeast-2",
+        "detail": {},
+        "detail-type": "Scheduled Event",
+        "source": "aws.events",
+        "time": "2019-03-01T01:23:45Z",
+        "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
+        "resources": [
+          "arn:aws:events:ap-southeast-2:123456789012:rule/my-schedule"
+        ]
+      }
+    }
   ]
 
   scenarios.forEach(scenario => {
@@ -317,50 +259,56 @@ describe("generateDashboardTrend", () => {
           });
       })
 
-      it('should generate the expected dashboard', () => {
-        const expected = require(scenario.dashboard)
-
-        return LambdaTester(index.generateDashboardTrend)
-          .event(scenario.event)
-          .expectResult((result, additional) => {
-            const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
-            // console.log("Dashboard: ", JSON.stringify(dashboard));
-            // const fs = require('fs')
-            // const path = require('path')
-            // fs.writeFileSync(path.join(__dirname, './generated.json'), JSON.stringify(dashboard, null, 2));
-            // console.log("Expected: ", JSON.stringify(dashboard));
-
-            // expect(JSON.stringify(dashboard)).to.equal(JSON.stringify(expected));
-            expect(dashboard, `${JSON.stringify(dashboard)}\n !== \n${JSON.stringify(expected)}`).to.deep.equal(expected);
-
-          });
-
-      })
-
       if (scenario.expectTruncated) {
-        describe('When there are too many pipelines in the account', () => {
-          // it('should report a maximum of 31 pipelines in the dashboard', () => {
-          //   const consoleSpy = sandbox.spy(console, 'warn')
-          //   return LambdaTester(index.generateDashboardTrend)
-          //     .event(scenario.event)
-          //     .expectResult((result, additional) => {
-          //       expect(consoleSpy).to.have.been.calledWith("Maximum of 31 allowed in a single dashboard.  Some pipelines will not be reported.");
-          //     });
-          // })
-          // it('should log a warning when pipelines will not be reported', () => {
-          //   const consoleSpy = sandbox.spy(console, 'warn')
-          //   return LambdaTester(index.generateDashboardTrend)
-          //     .event(scenario.event)
-          //     .expectResult((result, additional) => {
-          //       expect(consoleSpy).to.have.been.calledWith("Maximum of 31 allowed in a single dashboard.  Some pipelines will not be reported.");
-          //     });
-          // })
-          it('should truncate the dashboard', () => {
-            pending();
+        describe('When there are too many metrics in the account', () => {
+          it('should report a maximum of 150 metrics in the dashboard', () => {
+            const consoleSpy = sandbox.spy(console, 'warn')
+            return LambdaTester(index.generateDashboardTrend)
+              .event(scenario.event)
+              .expectResult((result, additional) => {
+                expect(consoleSpy).to.have.been.calledWith("Maximum of 150 metrics are allowed in a single dashboard. Some metrics will not be reported.");
+              });
+          })
+          it('should sort the list of metrics alphabetically and truncate the last one from the dashboard', () => {
+            let modifiedScenario = scenario
+            // Inserting a new service metric at the start of the array
+            modifiedScenario.metrics.Metrics.unshift({
+              "Namespace": "Operations",
+              "Dimensions": [
+                {
+                  "Name": "service",
+                  "Value": `service-ZZZ`
+                }
+              ],
+              "MetricName": "MTTR"
+            });
+            return LambdaTester(index.generateDashboardTrend)
+              .event(modifiedScenario.event)
+              .expectResult((result, additional) => {
+                const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
+                const metricWidgets = dashboard.widgets.filter(w => w.type === 'metric');
+
+                const metricsPerService = metricWidgets.map(w => w.properties.metrics)
+                let flattenedArray = [].concat.apply([], metricsPerService);
+                const zzzMetrics = flattenedArray.filter(m => m[0].label === "service-ZZZ")
+                expect(zzzMetrics.length).to.equal(0);
+              });
           })
         })
       } else {
-        const widgetsPerPipeline = 4;
+        it('should generate the expected dashboard', () => {
+          const expected = require(scenario.dashboard)
+
+          return LambdaTester(index.generateDashboardTrend)
+            .event(scenario.event)
+            .expectResult((result, additional) => {
+              const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
+              expect(dashboard, `${JSON.stringify(dashboard)}\n !== \n${JSON.stringify(expected)}`).to.deep.equal(expected);
+
+            });
+
+        })
+
         it(`should generate 6 non-text widgets per dashboard`, () => {
 
           return LambdaTester(index.generateDashboardTrend)
@@ -413,51 +361,6 @@ describe("generateDashboardTrend", () => {
           })
 
         })
-        // it('should graph all service metrics on each widget', () => {
-        //   return LambdaTester(index.generateDashboardTrend)
-        //     .event(scenario.event)
-        //     .expectResult((result, additional) => {
-        //       const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
-        //       const metricWidgets = dashboard.widgets.filter(w => w.type === 'metric');
-
-        //       const pipelineNames = [...new Set(scenario.metrics.Metrics.map(m => m.Dimensions[0].Value))];
-
-        //       pipelineNames.forEach((name, idx) => {
-        //         const startIdx = idx * widgetsPerPipeline;
-        //         const widgetsForPipeline = metricWidgets.slice(startIdx, startIdx + widgetsPerPipeline);
-
-        //         widgetsForPipeline.forEach(widget => {
-
-        //           expect(JSON.stringify(widget.properties.metrics)).to.contain(name)
-        //         })
-        //       })
-        //       console.log(pipelineNames)
-
-        //     });
-
-        // })
-        // it('should reference the PipelineName in the metrics for each widget', () => {
-        //   return LambdaTester(index.generateDashboardTrend)
-        //     .event(scenario.event)
-        //     .expectResult((result, additional) => {
-        //       const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
-        //       const metricWidgets = dashboard.widgets.filter(w => w.type === 'metric');
-
-        //       const pipelineNames = [...new Set(scenario.metrics.Metrics.map(m => m.Dimensions[0].Value))];
-
-        //       pipelineNames.forEach((name, idx) => {
-        //         const startIdx = idx * widgetsPerPipeline;
-        //         const widgetsForPipeline = metricWidgets.slice(startIdx, startIdx + widgetsPerPipeline);
-
-        //         widgetsForPipeline.forEach(widget => {
-
-        //           expect(JSON.stringify(widget.properties.metrics)).to.contain(name)
-        //         })
-        //       })
-        //       console.log(pipelineNames)
-
-        //     });
-        // })
       }
     })
   })
