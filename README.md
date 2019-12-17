@@ -19,11 +19,13 @@ Another important metric is MTTI (Mean Time To Identification).  Depending on yo
 
 # WHAT
 
-![](./doc/img/failure-metric-architecture.png)
+![architecture-diagram](./doc/img/failure-metric-architecture.png)
 
 This project uses Cloud Watch Alarms, which sends notifications to Event Bridge, to trigger lambda functions to calculate, and publish, custom CloudWatch Metrics for the alarm.
 
 Metrics are generated under the namespace `Operations`, named for the metric, e.g. `MTTF`, `MTTR`.  A metric dimension `service` is generated based on the alarm name.
+
+![sample-dashboard](./dock/img/availability-metrics-dashboard.png)
 
 ## Adding to your project
 
