@@ -25,7 +25,7 @@ This project uses Cloud Watch Alarms, which sends notifications to Event Bridge,
 
 Metrics are generated under the namespace `Operations`, named for the metric, e.g. `MTTF`, `MTTR`.  A metric dimension `service` is generated based on the alarm name.
 
-![sample-dashboard](./dock/img/availability-metrics-dashboard.png)
+![sample-dashboard](./doc/img/availability-metrics-dashboard.png)
 
 ## Adding to your project
 
