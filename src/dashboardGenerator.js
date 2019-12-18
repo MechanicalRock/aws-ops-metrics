@@ -285,7 +285,7 @@ class DashboardTrendGenerator {
         } else {
 
           state.metrics =
-            data.Metrics.map(m => m.Dimensions.filter(d => d.Name === 'service').map(d => { return { serviceName: d.Value, metricName: m.MetricName } }))
+            data.Metrics.map(metric => metric.Dimensions.filter(dimension => dimension.Name === 'service').map(dimension => { return { serviceName: dimension.Value, metricName: metric.MetricName } }))
               .reduce((a, b) => a.concat(b), state.metrics);
         }
       });
@@ -333,7 +333,7 @@ class DashboardTrendGenerator {
       }
     ];
 
-    textArray.forEach(l => {
+    textArray.forEach(text => {
       dashboard.widgets.push({
         "type": "text",
         "x": x,
@@ -341,7 +341,7 @@ class DashboardTrendGenerator {
         "width": 8,
         "height": TEXT_HEIGHT,
         "properties": {
-          "markdown": `\n### ${l.title}\n${l.description}`
+          "markdown": `\n### ${text.title}\n${text.description}`
         }
       });
 
