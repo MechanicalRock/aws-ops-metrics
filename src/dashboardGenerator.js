@@ -144,7 +144,7 @@ function averageWidgets(metrics, y, state) {
         "view": "singleValue",
         "region": state.region,
         "stat": "Average",
-        "period": 604800,
+        "period": SEVEN_DAYS,
         "title": `${mapping.label} Average (7d)`
       }
     }
