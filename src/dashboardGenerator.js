@@ -59,10 +59,12 @@ function trendWidgets(metrics, y, state) {
     const region = state.region;
     const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
     let resultMetrics = filterredGroup.map((mappinggroup, index) => {
+      const convertedMetric = `m${index}/${mapping.unitConversion.unit}`
+
       return [
         [
           {
-            "expression": `FILL(m${index}/${mapping.unitConversion.unit},AVG(m${index}/${mapping.unitConversion.unit}))`,
+            "expression": `FILL(${convertedMetric},AVG(${convertedMetric}))`,
             "id": `e${index}`,
             "region": "ap-southeast-2",
             "label": mappinggroup.serviceName
