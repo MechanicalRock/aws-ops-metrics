@@ -122,8 +122,7 @@ describe("generateDashboardTrend", () => {
       }
     },
     {
-      description: "sample dashboard - multiple service",
-      dashboard: "./sample-data/dashboard-multiple-sample.json",
+      description: "sample dashboard - more metrics than allowed in a single dashboard",
       uniqueServices: 51,
       expectTruncated: true,
 
@@ -186,18 +185,6 @@ describe("generateDashboardTrend", () => {
           });
       })
 
-      it('should generate 3 text widgets - to explain each metric + interpretation', () => {
-        return LambdaTester(index.generateDashboardTrend)
-          .event(scenario.event)
-          .expectResult((result, additional) => {
-            const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
-            const textWidgets = dashboard.widgets.filter(w => w.type === 'text');
-
-            expect(textWidgets.length).to.equal(3);
-
-          });
-      })
-
       if (scenario.expectTruncated) {
         describe('When there are too many metrics in the account', () => {
           it('should report a maximum of 150 metrics in the dashboard', () => {
@@ -206,6 +193,17 @@ describe("generateDashboardTrend", () => {
               .event(scenario.event)
               .expectResult((result, additional) => {
                 expect(consoleSpy).to.have.been.calledWith("Maximum of 150 metrics are allowed in a single dashboard. Some metrics will not be reported.");
+              });
+          })
+          it('should generate 4 text widgets - to explain each metric and a warning text to expect truncate', () => {
+            return LambdaTester(index.generateDashboardTrend)
+              .event(scenario.event)
+              .expectResult((result, additional) => {
+                const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
+                const textWidgets = dashboard.widgets.filter(w => w.type === 'text');
+                console.log("Dashboard is: ", JSON.stringify(dashboard));
+                expect(textWidgets.length).to.equal(4);
+
               });
           })
           it('should sort the list of metrics alphabetically and truncate the last one from the dashboard', () => {
@@ -246,6 +244,18 @@ describe("generateDashboardTrend", () => {
 
             });
 
+        })
+
+        it('should generate 3 text widgets - to explain each metric + interpretation', () => {
+          return LambdaTester(index.generateDashboardTrend)
+            .event(scenario.event)
+            .expectResult((result, additional) => {
+              const dashboard = JSON.parse(putDashboardSpy.getCall(0).args[0].DashboardBody);
+              const textWidgets = dashboard.widgets.filter(w => w.type === 'text');
+
+              expect(textWidgets.length).to.equal(3);
+
+            });
         })
 
         it(`should generate 6 non-text widgets per dashboard`, () => {

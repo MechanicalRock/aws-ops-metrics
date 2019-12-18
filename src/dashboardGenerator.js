@@ -44,13 +44,12 @@ const applyLimits = (state) => {
     console.warn(`Maximum of ${maxSupportedMetrics} metrics are allowed in a single dashboard. Some metrics will not be reported.`);
     state.metrics = state.metrics.sort((a, b) => (a.serviceName > b.serviceName) ? 1 : -1);
     state.metrics = state.metrics.slice(0, maxSupportedMetrics);
+    state.expectTruncated = true;
+    state.yOffset = 2;
   }
 };
 
-function flattenNestedArray(array, thisArray) {
-  if (thisArray) {
-    return [].concat.apply(thisArray, array);
-  }
+function flattenNestedArray(array) {
   return [].concat.apply([], array);
 }
 
@@ -89,7 +88,7 @@ function trendWidgets(metrics, y, state) {
     return {
       "type": "metric",
       "x": mapping.x,
-      "y": mapping.y,
+      "y": y,
       "width": WIDGET_WIDTH,
       "height": WIDGET_HEIGHT,
       "properties": {
@@ -137,7 +136,7 @@ function averageWidgets(metrics, y, state) {
     return {
       "type": "metric",
       "x": mapping.x,
-      "y": 10,
+      "y": y,
       "width": WIDGET_WIDTH,
       "height": WIDGET_HEIGHT,
       "properties": {
@@ -164,11 +163,10 @@ class DashboardTrendGenerator {
 
   initializeState(state) {
     state.metrics = [];
-
+    state.yOffset = 0;
     state.widgetMappings = [
       {
         "x": 0,
-        "y": 4,
         "unitConversion": HOURS,
         "label": "MTTR",
         "properties": {
@@ -203,7 +201,6 @@ class DashboardTrendGenerator {
       },
       {
         "x": 8,
-        "y": 4,
         "unitConversion": DAYS,
         "label": "MTBF",
         "properties": {
@@ -238,7 +235,6 @@ class DashboardTrendGenerator {
       },
       {
         "x": 16,
-        "y": 4,
         "unitConversion": DAYS,
         "label": "MTTF",
         "properties": {
@@ -300,9 +296,10 @@ class DashboardTrendGenerator {
 
   putDashboard(state) {
     state.metrics = [...new Set(state.metrics)].sort();
-    let y = 0; // leave space for the legend on first row
 
     applyLimits(state);
+
+    let y = state.yOffset; // leave space for the legend on first row
 
     let dashboard = {
       "start": "-P42D",
@@ -311,7 +308,7 @@ class DashboardTrendGenerator {
 
     const TEXT_HEIGHT = 4;
     let x = 0;
-    [
+    let textArray = [
       {
         "title": "MTTR",
         "description":
@@ -334,12 +331,14 @@ class DashboardTrendGenerator {
           "A low MTTF indicates that the system if often unavailable.\n\n" +
           "Improve availability by improving system resiliency.  Reduce planned outages using staged deployment, such as blue/green or canary releasing.\n"
       }
-    ].forEach(l => {
+    ];
+
+    textArray.forEach(l => {
       dashboard.widgets.push({
         "type": "text",
         "x": x,
         "y": y,
-        "width": l.y ? l.y : 8,
+        "width": 8,
         "height": TEXT_HEIGHT,
         "properties": {
           "markdown": `\n### ${l.title}\n${l.description}`
@@ -348,13 +347,30 @@ class DashboardTrendGenerator {
 
       x += 8;
     });
+
+    if (state.expectTruncated) {
+      dashboard.widgets.push({
+        "type": "text",
+        "x": 0,
+        "y": 0,
+        "width": 24,
+        "height": state.yOffset,
+        "properties": {
+          "markdown": `\n### Warning\nMaximum number of allowed metrics in a single dashboard is reached. Some metrics will not be reported.`
+        }
+      });
+    }
     y += TEXT_HEIGHT;
 
-    let widget = [trendWidgets(state.metrics, y, state)].concat(averageWidgets(state.metrics, y, state));
+    const tWidgets = trendWidgets(state.metrics, y, state);
+    dashboard.widgets.push(tWidgets);
+
     y += WIDGET_HEIGHT;
+    const aWidgets = averageWidgets(state.metrics, y, state);
+    dashboard.widgets.push(aWidgets);
 
     // flatten the nested arrays
-    dashboard.widgets = flattenNestedArray(widget, dashboard.widgets);
+    dashboard.widgets = flattenNestedArray(dashboard.widgets);
 
     return state.cloudwatch.putDashboard({
       'DashboardName': 'AvailabilityTrends-' + state.region,
