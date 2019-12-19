@@ -20,4 +20,4 @@ phases:
   post_build:
     commands:
       - sam publish --template .out/packaged.yaml --region ${AWS_REGION}
-      - sam publish --template .out/packaged.yaml --region us-east-2
+      - sam publish --template .out/packaged.yaml --region us-east-1
