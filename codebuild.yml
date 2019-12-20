@@ -24,7 +24,7 @@ Resources:
   BuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ops-metrics-codebuild
+      RoleName: !Sub "ops-metrics-codebuild-${AWS::Region}"
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
