@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["metrics", "mttr", "mtbf"]
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.2.0
+    SemanticVersion: 1.2.1
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Resources:
@@ -24,6 +24,16 @@ Resources:
         Statement:
           - Effect: Allow
             Action: cloudwatch:DescribeAlarmHistory
+            Resource: "*"
+
+  ListPipelinePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: codepipeline:ListPipelines
             Resource: "*"
 
   MTTREventHandler:
@@ -84,6 +94,28 @@ Resources:
                 - "CloudWatch Alarm State Change"
       Policies:
         - CloudWatchPutMetricPolicy: {}
+        - !Ref DescribeAlarmPolicy
+
+  StateChangeHandler:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Description: Capturing all cloudwatch alarm State changes in dynamo
+      Handler: stateChangeHandler.handler
+      Runtime: nodejs12.x
+      CodeUri: .build/src
+      Events:
+        cloudwatchEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - "aws.cloudwatch"
+              detail-type:
+                - "CloudWatch Alarm State Change"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: EventStore
+        - !Ref ListPipelinePolicy
         - !Ref DescribeAlarmPolicy
 
   OpsDashboardGenerator:
