@@ -8,10 +8,14 @@ if (!AWS.config.region) {
   AWS.config.region = "ap-southeast-2";
 }
 
-const PIPELINE_NAME = "";
+export interface ILastItemState {
+  lastStateItemInDynamo: AWS.DynamoDB.DocumentClient.AttributeMap | null;
+}
 
 export class StateChangeCapture {
-
+  state: ILastItemState = {
+    lastStateItemInDynamo: null
+  };
   public async run(event: CloudwatchStateChangeEvent) {
     const stateChanged = await this.hasStatusChanged(event);
 
@@ -22,7 +26,8 @@ export class StateChangeCapture {
         id: event.detail.alarmName,
         resourceId: pipelineName,
         value: value,
-        state: event.detail.state.value
+        state: event.detail.state.value,
+        eventTime: event.detail.state.timestamp
       }
       await createDbEntry(payload)
     }
@@ -60,11 +65,20 @@ export class StateChangeCapture {
   }
 
   private async findPipelineName(event: CloudwatchStateChangeEvent) {
-    return 'pipeline1'
+    if (this.state && this.state.lastStateItemInDynamo && this.state.lastStateItemInDynamo.resourceId) {
+      return this.state.lastStateItemInDynamo.resourceId;
+    }
+    const pipelineNames = await this.getPipelineNames();
+    const pipelineName = pipelineNames ? pipelineNames.find(name => name ? name.toLowerCase().includes(event.detail.alarmName.toLowerCase()) : false) : "";
+    if (!pipelineName) {
+      throw new Error("pipelineName matching with alarmName was not found");
+    }
+    return pipelineName;
   }
 
   private async getPreviousStateFromDynamo(event: CloudwatchStateChangeEvent) {
     const data = await getLastItemById(event.detail.alarmName);
+    this.state.lastStateItemInDynamo = data.Items && data.Items.length > 0 ? data.Items[0] : null;
     let prevState = data.Items && data.Items.length > 0 ? data.Items[0].state : null
 
     return prevState;
