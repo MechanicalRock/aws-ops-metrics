@@ -1,6 +1,43 @@
 import { CloudwatchStateChangeEvent } from './common';
 import { metricTimestampFromAlarmEvent } from './cloudwatchAlarmEvent';
 import * as AWS from 'aws-sdk';
+import { DynamoDBStreamEvent } from 'aws-lambda';
+
+export const handler = async (event: DynamoDBStreamEvent) => {
+  console.log("stream event is: ", JSON.stringify(event));
+  for (var i = 0; i < event.Records.length; i++) {
+    const record = event.Records[i];
+
+    if (!record.dynamodb || !record.dynamodb.Keys) {
+      throw new Error(`Unstructured dynamo record`);
+    }
+
+    try {
+      switch (record.eventName) {
+        case 'MODIFY': {
+          break;
+        }
+        case 'INSERT': {
+          const converter = AWS.DynamoDB.Converter.unmarshall;
+          let newRecord = record.dynamodb.NewImage ? converter(record.dynamodb.NewImage) : undefined;
+          // let key = newRecord.resourceId;
+
+          break;
+        }
+        case 'REMOVE': {
+          break;
+        }
+        default:
+          throw new Error(record.eventName + ' wasn\'t recognized');
+      }
+    } catch (e) {
+      console.log(e);
+      console.log("Failed to process stream record. Continuing without it");
+    }
+  }
+  return 'Stream handling completed';
+};
+
 
 async function updateProductsCurrentHealth(pipelineNames, event: CloudwatchStateChangeEvent) {
   if (pipelineNames.length < 1) {

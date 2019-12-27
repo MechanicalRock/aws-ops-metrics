@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["metrics", "mttr", "mtbf"]
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.2.2
+    SemanticVersion: 1.2.3
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Resources:
@@ -95,6 +95,24 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
+
+  DynamoStreamHandler:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Description: Create CloudWatch mttf metric from cloudwatch alarm events
+      Handler: dynamoStream.handler
+      Runtime: nodejs12.x
+      CodeUri: .build/src
+      Events:
+        DynamoDBStream:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              'Fn::GetAtt':
+                - EventStoreDynamoTable
+                - StreamArn
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
 
   StateChangeHandler:
     Type: "AWS::Serverless::Function"
