@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["metrics", "mttr", "mtbf"]
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.2.1
+    SemanticVersion: 1.2.2
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Resources:
@@ -103,6 +103,9 @@ Resources:
       Handler: stateChangeHandler.handler
       Runtime: nodejs12.x
       CodeUri: .build/src
+      Environment:
+        Variables:
+          TABLE_NAME: EventStore
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent

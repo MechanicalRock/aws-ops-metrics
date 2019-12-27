@@ -1,6 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 
-const TABLE_NAME: string = process.env.TABLE_NAME ? process.env.TABLE_NAME : "eventStore";
+const TABLE_NAME: string = process.env.TABLE_NAME ? process.env.TABLE_NAME : "EventStore";
 
 export const createDbEntry = async (payload: { id: string; resourceId: string;[key: string]: any }) => {
   const db = new DynamoDB.DocumentClient();
