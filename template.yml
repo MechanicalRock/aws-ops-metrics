@@ -111,6 +111,7 @@ Resources:
               'Fn::GetAtt':
                 - EventStoreDynamoTable
                 - StreamArn
+            StartingPosition: TRIM_HORIZON
       Policies:
         - CloudWatchPutMetricPolicy: {}
 
