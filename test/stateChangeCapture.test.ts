@@ -53,7 +53,7 @@ describe('stateChangeCapture', () => {
   beforeEach(async () => {
     dynamoPutSpy = jest.fn().mockReturnValue({});
     alarmHistory = [];
-    process.env.TABLE_NAME = "eventStore";
+    process.env.TABLE_NAME = "EventStore";
     eventStoreSpy = jest.spyOn(alarmEventStore, "getLastItemById");
     AWSMock.mock("DynamoDB.DocumentClient", "put", (params, callback) => {
       callback(null, dynamoPutSpy(params));
@@ -137,7 +137,7 @@ describe('stateChangeCapture', () => {
   it('should store the event value of -1 in dynamo when state changes from ALARM to OK', async () => {
     mockGetLastItemFromDynamo("ALARM");
     await handler(mockCloudwatchEvent);
-    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "OK", "value": -1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "eventStore" };
+    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "OK", "value": -1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
     expect(dynamoPutSpy).toBeCalledWith(expected);
   })
 
@@ -146,7 +146,7 @@ describe('stateChangeCapture', () => {
     mockGetLastItemFromDynamo("OK");
     alarmStateEvent.detail.state.value = "ALARM";
     await handler(alarmStateEvent);
-    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "ALARM", "value": 1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "eventStore" };
+    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "ALARM", "value": 1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
     expect(dynamoPutSpy).toBeCalledWith(expected);
   })
 
