@@ -67,8 +67,8 @@ export class StateChangeCapture {
   }
 
   private async findPipelineName(event: CloudwatchStateChangeEvent) {
-    if (this.state && this.state.lastStateItemInDynamo && this.state.lastStateItemInDynamo.resourceId) {
-      return this.state.lastStateItemInDynamo.resourceId;
+    if (this.state && this.state.lastStateItemInDynamo && this.state.lastStateItemInDynamo.pipelineName) {
+      return this.state.lastStateItemInDynamo.pipelineName;
     }
     const pipelineNames = await this.getPipelineNames();
     const pipelineName = pipelineNames ? pipelineNames.find(name => name ? name.toLowerCase().includes(event.detail.alarmName.toLowerCase()) : false) : "";
