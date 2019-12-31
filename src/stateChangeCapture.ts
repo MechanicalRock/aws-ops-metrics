@@ -23,8 +23,10 @@ export class StateChangeCapture {
       const pipelineName = await this.findPipelineName(event);
       const value = event.detail.state.value === "ALARM" ? 1 : -1;
       const payload = {
-        id: event.detail.alarmName,
-        resourceId: pipelineName,
+        id: `ALARM_${event.detail.alarmName}`,
+        resourceId: `${event.detail.state.timestamp}`,
+        pipelineName: pipelineName,
+        bookmarked: "N",
         value: value,
         state: event.detail.state.value,
         eventTime: event.detail.state.timestamp
