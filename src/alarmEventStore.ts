@@ -26,6 +26,22 @@ export const getDbEntryById = async (id: string, resourceId: string) => {
     .promise()).Item;
 };
 
+export const queryAllUnbookmaredEvents = async (pipelineName: string) => {
+  const db = new DynamoDB.DocumentClient();
+  const queryInput: DynamoDB.DocumentClient.QueryInput = {
+    TableName: TABLE_NAME,
+    IndexName: "pipelineName-index",
+    KeyConditionExpression: 'pipelineName = :name and bookmarked = :value',
+    ExpressionAttributeValues: {
+      ':name': pipelineName,
+      ':value': "N"
+    }
+  };
+  const results = await db.query(queryInput).promise();
+  return results;
+};
+
+
 export const getLastItemById = async (id: string) => {
   const db = new DynamoDB.DocumentClient();
   const queryInput: DynamoDB.DocumentClient.QueryInput = {

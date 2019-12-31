@@ -1,7 +1,19 @@
-import { CloudwatchStateChangeEvent } from './common';
+import { CloudwatchStateChangeEvent, sortItemsByResourceId } from './common';
 import { metricTimestampFromAlarmEvent } from './cloudwatchAlarmEvent';
 import * as AWS from 'aws-sdk';
 import { DynamoDBStreamEvent } from 'aws-lambda';
+import { getDbEntryById, queryAllUnbookmaredEvents, createDbEntry } from './alarmEventStore';
+
+
+if (!AWS.config.region) {
+  AWS.config.region = "ap-southeast-2";
+}
+
+export interface payload {
+  id: string;
+  resourceId: string;
+  [key: string]: any
+}
 
 export const handler = async (event: DynamoDBStreamEvent) => {
   console.log("stream event is: ", JSON.stringify(event));
@@ -19,9 +31,31 @@ export const handler = async (event: DynamoDBStreamEvent) => {
         }
         case 'INSERT': {
           const converter = AWS.DynamoDB.Converter.unmarshall;
-          let newRecord = record.dynamodb.NewImage ? converter(record.dynamodb.NewImage) : undefined;
-          // let key = newRecord.resourceId;
+          if (record.dynamodb.NewImage) {
+            const newRecord = converter(record.dynamodb.NewImage);
+            const id = newRecord.id;
 
+            if (id.startsWith("ALARM_")) {
+              const list = await queryAllUnbookmaredEvents(newRecord.pipelineName);
+              const sortedList = sortItemsByResourceId(list);
+              if (sortedList && sortedList.length > 0) {
+                const score = await calculateTheScore(sortedList, newRecord.pipelineName);
+                const payload = {
+                  id: newRecord.pipelineName,
+                  resourceId: `Attribute`,
+                  score: score,
+                  lastBookmarkedItem: `${sortedList[sortedList.length - 1].id}#${sortedList[sortedList.length - 1].resourceId}`
+                }
+                await createDbEntry(payload)
+                // update the list with removing the bookmark key therefore removing them from GSI
+                for (var i = 0; i < sortedList.length; i++) {
+                  var currentItem = sortedList[i];
+                  delete currentItem.bookmarked;
+                  await createDbEntry(currentItem as payload);
+                }
+              }
+            }
+          }
           break;
         }
         case 'REMOVE': {
@@ -39,24 +73,17 @@ export const handler = async (event: DynamoDBStreamEvent) => {
 };
 
 
-async function updateProductsCurrentHealth(pipelineNames, event: CloudwatchStateChangeEvent) {
-  if (pipelineNames.length < 1) {
-    console.log("No pipeline in the account")
-
-    return;
-  }
-  const alarmName = event.detail.alarmName.toLocaleLowerCase();
-
-  const filteredNames = pipelineNames.filter(name => {
-    if (alarmName.includes(name.toLowerCase())) {
-      return name;
-    }
+async function calculateTheScore(sortedList, pipelineName: string) {
+  var score = 0;
+  sortedList.forEach(item => {
+    score = score + item.value
   })
 
-  // 1. Query dynamo for current value Or I don't need that because it's always defaulted to zero?
-  // what if there are no pipelines/ or they're not CNF enabled
-  // 2. If null or zero? make it to 1 if Alarm, if OK make it to 0
-  // 3. if there is value give it +1 if Alarm, -1 if OK
+  const item = await getDbEntryById(pipelineName, "Attribute");
+  if (item && item.score) {
+    score = score + item.score
+  }
+  return score;
 }
 
 async function putMetrics(pipelineNames, event: CloudwatchStateChangeEvent) {

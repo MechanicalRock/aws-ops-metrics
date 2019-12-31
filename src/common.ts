@@ -51,13 +51,19 @@ export interface CloudwatchStateChangeEvent {
   }
 }
 
+export function sortItemsByResourceId(items: AWS.DynamoDB.DocumentClient.QueryOutput) {
+  if (items.Items) {
+    var sortedlist = items.Items.sort((a, b) => (a.resourceId > b.resourceId) ? 1 : -1);
+    return sortedlist;
+  }
+  return [];
+}
+
 export function calculateMetric(metric: string, newState: AlarmState, oldState: AlarmState) {
 
   return async (event: CloudwatchStateChangeEvent) => {
     const cw = new CloudWatch();
-
     console.debug("Event received: " + JSON.stringify(event));
-
     if (!isAlarmEventForState(event, newState)) {
       console.debug(`State '${newState}' not matched for event. Ignoring`);
       return {};
