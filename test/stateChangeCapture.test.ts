@@ -114,7 +114,8 @@ describe('stateChangeCapture', () => {
       Items:
         [{
           id: 'flaky-service',
-          resourceId: '1577082070_pipeline5',
+          resourceId: '2019-12-12T06:25:41.200+0000',
+          pipelineName: 'pipeline5',
           value: -1,
           state: prevState
         }],
@@ -137,7 +138,7 @@ describe('stateChangeCapture', () => {
   it('should store the event value of -1 in dynamo when state changes from ALARM to OK', async () => {
     mockGetLastItemFromDynamo("ALARM");
     await handler(mockCloudwatchEvent);
-    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "OK", "value": -1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
+    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
     expect(dynamoPutSpy).toBeCalledWith(expected);
   })
 
@@ -146,7 +147,7 @@ describe('stateChangeCapture', () => {
     mockGetLastItemFromDynamo("OK");
     alarmStateEvent.detail.state.value = "ALARM";
     await handler(alarmStateEvent);
-    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "ALARM", "value": 1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
+    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1, "eventTime": "2019-12-12T06:25:41.200+0000" }, "TableName": "EventStore" };
     expect(dynamoPutSpy).toBeCalledWith(expected);
   })
 
@@ -181,7 +182,7 @@ describe('stateChangeCapture', () => {
     mockCloudwatchHistory(items);
     alarmStateEvent.detail.state.value = "ALARM";
     await handler(alarmStateEvent);
-    var expected = { "Item": { "id": "flaky-service", "resourceId": "1577082070_pipeline5", "state": "ALARM", "value": 1 }, "TableName": "eventStore" };
+    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "eventStore" };
     expect(dynamoPutSpy).toBeCalledWith(expected);
   })
 
