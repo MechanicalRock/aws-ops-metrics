@@ -28,8 +28,7 @@ export class StateChangeCapture {
         pipelineName: pipelineName,
         bookmarked: "N",
         value: value,
-        state: event.detail.state.value,
-        eventTime: event.detail.state.timestamp
+        state: event.detail.state.value
       }
       await createDbEntry(payload)
     }

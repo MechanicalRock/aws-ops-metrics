@@ -1,5 +1,4 @@
-import { CloudwatchStateChangeEvent, sortItemsByResourceId } from './common';
-import { metricTimestampFromAlarmEvent } from './cloudwatchAlarmEvent';
+import { sortItemsByResourceId } from './common';
 import * as AWS from 'aws-sdk';
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { getDbEntryById, queryAllUnbookmaredEvents, createDbEntry } from './alarmEventStore';
@@ -27,6 +26,17 @@ export const handler = async (event: DynamoDBStreamEvent) => {
     try {
       switch (record.eventName) {
         case 'MODIFY': {
+          const converter = AWS.DynamoDB.Converter.unmarshall;
+          if (record.dynamodb.NewImage) {
+            const newRecord = converter(record.dynamodb.NewImage);
+            const resourceId = newRecord.id;
+
+            if (resourceId === "Pipeline_Attribute") {
+              await putMetric(newRecord);
+              break
+            }
+
+          }
           break;
         }
         case 'INSERT': {
@@ -34,26 +44,16 @@ export const handler = async (event: DynamoDBStreamEvent) => {
           if (record.dynamodb.NewImage) {
             const newRecord = converter(record.dynamodb.NewImage);
             const id = newRecord.id;
-
             if (id.startsWith("ALARM_")) {
-              const list = await queryAllUnbookmaredEvents(newRecord.pipelineName);
-              const sortedList = sortItemsByResourceId(list);
-              if (sortedList && sortedList.length > 0) {
-                const score = await calculateTheScore(sortedList, newRecord.pipelineName);
-                const payload = {
-                  id: newRecord.pipelineName,
-                  resourceId: `Attribute`,
-                  score: score,
-                  lastBookmarkedItem: `${sortedList[sortedList.length - 1].id}#${sortedList[sortedList.length - 1].resourceId}`
-                }
-                await createDbEntry(payload)
-                // update the list with removing the bookmark key therefore removing them from GSI
-                for (var i = 0; i < sortedList.length; i++) {
-                  var currentItem = sortedList[i];
-                  delete currentItem.bookmarked;
-                  await createDbEntry(currentItem as payload);
-                }
-              }
+              await updatePipelineScore(newRecord);
+              break
+            }
+            console.log("Here, before if");
+            const resourceId = newRecord.resourceId;
+            if (resourceId === "Pipeline_Attribute") {
+              console.log("Here, inside if");
+              await putMetric(newRecord);
+              break
             }
           }
           break;
@@ -72,6 +72,27 @@ export const handler = async (event: DynamoDBStreamEvent) => {
   return 'Stream handling completed';
 };
 
+async function updatePipelineScore(newRecord) {
+  const list = await queryAllUnbookmaredEvents(newRecord.pipelineName);
+  const sortedList = sortItemsByResourceId(list);
+
+  if (sortedList && sortedList.length > 0) {
+    const score = await calculateTheScore(sortedList, newRecord.pipelineName);
+    const payload = {
+      id: newRecord.pipelineName,
+      resourceId: `Pipeline_Attribute`,
+      score: score,
+      lastBookmarkedItem: `${sortedList[sortedList.length - 1].id}#${sortedList[sortedList.length - 1].resourceId}`
+    }
+    await createDbEntry(payload)
+    // update the list with removing the bookmark key therefore removing them from GSI (sparse GSI)
+    for (var i = 0; i < sortedList.length; i++) {
+      var currentItem = sortedList[i];
+      delete currentItem.bookmarked;
+      await createDbEntry(currentItem as payload);
+    }
+  }
+}
 
 async function calculateTheScore(sortedList, pipelineName: string) {
   var score = 0;
@@ -79,48 +100,34 @@ async function calculateTheScore(sortedList, pipelineName: string) {
     score = score + item.value
   })
 
-  const item = await getDbEntryById(pipelineName, "Attribute");
+  const item = await getDbEntryById(pipelineName, "Pipeline_Attribute");
   if (item && item.score) {
     score = score + item.score
   }
   return score;
 }
 
-async function putMetrics(pipelineNames, event: CloudwatchStateChangeEvent) {
+async function putMetric(newRecord) {
   const cw = new AWS.CloudWatch()
-  if (pipelineNames.length < 1) {
-    console.log("No pipeline in the account")
-    return;
-  }
-  else {
-    const filteredNames = pipelineNames.filter(name => {
-      const alarmName = event.detail.alarmName.toLocaleLowerCase();
-      if (alarmName.includes(name.toLowerCase())) {
-        return name;
-      }
-    })
-    // It creates the metric but Don't know why it's not adding any value
-    for (var i = 0; i < filteredNames.length; i++) {
-      const pipeline = filteredNames[i];
-      console.log("It's a match: ", pipeline);
-      const metricTime = metricTimestampFromAlarmEvent(event);
-      await cw.putMetricData({
-        MetricData: [
+  const pipelineName = newRecord.id;
+  //Not sure what should the metrics time be
+  const timeStamp = new Date();
+  console.log("Here, trying to put metric");
+  await cw.putMetricData({
+    MetricData: [
+      {
+        MetricName: "product-health-metric",
+        Dimensions: [
           {
-            MetricName: "product-health-metric",
-            Dimensions: [
-              {
-                Name: "product",
-                Value: pipeline,
-              },
-            ],
-            Timestamp: metricTime,
-            Value: 3,
-            Unit: "Count"
+            Name: "product",
+            Value: pipelineName,
           },
         ],
-        Namespace: "Health-Monitoring",
-      }).promise();
-    }
-  }
+        Timestamp: timeStamp,
+        Value: newRecord.score,
+        Unit: "Count"
+      },
+    ],
+    Namespace: "Health-Monitoring",
+  }).promise();
 }
