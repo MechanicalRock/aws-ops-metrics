@@ -123,7 +123,7 @@ describe('dynamoStream', () => {
       let pipelineEvent: DynamoDBStreamEvent = { ...dynamoMockStreamEvent };
       pipelineEvent.Records[0].dynamodb = mockPipelineItemDynamoObject;
       await handler(pipelineEvent);
-      // expect(cloudWatchMetricSpy).toBeCalled();
+      expect(cloudWatchMetricSpy).toBeCalled();
     });
 
     it('Modify event- should put metrics using the incoming score', async () => {
@@ -131,7 +131,7 @@ describe('dynamoStream', () => {
       pipelineEvent.Records[0].dynamodb = mockPipelineItemDynamoObject;
       pipelineEvent.Records[0].eventName = "MODIFY";
       await handler(pipelineEvent);
-      // expect(cloudWatchMetricSpy).toBeCalled();
+      expect(cloudWatchMetricSpy).toBeCalled();
     });
   });
 
