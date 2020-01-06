@@ -17,21 +17,21 @@ describe('dynamoStream', () => {
 
   beforeEach(async () => {
     cloudWatchMetricSpy = jest.fn().mockReturnValue({});
-    dynamoPutSpy = jest.fn().mockReturnValue({});
     queryUnbookedmarkEventsSpy = jest.spyOn(alarmEventStore, "queryAllUnbookmaredEvents");
+    dynamoPutSpy = jest.spyOn(alarmEventStore, "createDbEntry");
     getpipelineItemSpy = jest.spyOn(alarmEventStore, "getDbEntryById");
     process.env.TABLE_NAME = "EventStore";
+    mockCreateDBEntry();
+
     AWSMock.mock("CloudWatch", "putMetricData", (params, callback) => {
       callback(null, cloudWatchMetricSpy(params));
-    });
-    AWSMock.mock("DynamoDB.DocumentClient", "put", (params, callback) => {
-      callback(null, dynamoPutSpy(params));
     });
   });
 
   afterEach(() => {
     AWSMock.restore();
     queryUnbookedmarkEventsSpy.mockRestore();
+    dynamoPutSpy.mockRestore();
   });
 
   describe('Alarm item stream - multiple unbookmarked items in dynamo', () => {
@@ -42,37 +42,25 @@ describe('dynamoStream', () => {
 
       [
         {
-          Item:
-          {
-            value: 1,
-            id: 'ALARM_flaky-service',
-            resourceId: '2019-12-30T00:47:41.171+0000',
-            pipelineName: 'flaky-service-pipeline',
-            state: 'Alarm'
-          },
-          TableName: "EventStore"
+          value: 1,
+          id: 'ALARM_flaky-service',
+          resourceId: '2019-12-30T00:47:41.171+0000',
+          pipelineName: 'flaky-service-pipeline',
+          state: 'Alarm'
         },
         {
-          Item:
-          {
-            value: 1,
-            id: 'ALARM_flaky-service-lambda-errors',
-            resourceId: '2019-12-30T01:47:41.171+0000',
-            pipelineName: 'flaky-service-pipeline',
-            state: 'Alarm'
-          },
-          TableName: "EventStore"
+          value: 1,
+          id: 'ALARM_flaky-service-lambda-errors',
+          resourceId: '2019-12-30T01:47:41.171+0000',
+          pipelineName: 'flaky-service-pipeline',
+          state: 'Alarm'
         },
         {
-          Item:
-          {
-            value: -1,
-            id: 'ALARM_flaky-service-lambda-errors',
-            resourceId: '2019-12-30T02:47:41.171+0000',
-            pipelineName: 'flaky-service-pipeline',
-            state: 'OK'
-          },
-          TableName: "EventStore"
+          value: -1,
+          id: 'ALARM_flaky-service-lambda-errors',
+          resourceId: '2019-12-30T02:47:41.171+0000',
+          pipelineName: 'flaky-service-pipeline',
+          state: 'OK'
         }
       ].forEach(item => expect(dynamoPutSpy).toBeCalledWith(item));
     });
@@ -83,11 +71,7 @@ describe('dynamoStream', () => {
       mockgetPipelineItem(previousScore);
       await handler(dynamoMockStreamEvent);
       const expected = {
-        Item:
-        {
-          "score": 3, "id": "flaky-service-pipeline", "lastBookmarkedItem": "ALARM_flaky-service-lambda-errors#2019-12-30T02:47:41.171+0000", "resourceId": "Pipeline_Attribute"
-        },
-        TableName: "EventStore"
+        "score": 3, "id": "flaky-service-pipeline", "lastBookmarkedItem": "ALARM_flaky-service-lambda-errors#2019-12-30T02:47:41.171+0000", "resourceId": "Pipeline_Attribute"
       }
       expect(dynamoPutSpy).toBeCalledWith(expected);
     });
@@ -97,11 +81,7 @@ describe('dynamoStream', () => {
       mockReturnEmptyPipelineItem();
       await handler(dynamoMockStreamEvent);
       const expected = {
-        Item:
-        {
-          "score": 1, "id": "flaky-service-pipeline", "lastBookmarkedItem": "ALARM_flaky-service-lambda-errors#2019-12-30T02:47:41.171+0000", "resourceId": "Pipeline_Attribute"
-        },
-        TableName: "EventStore"
+        "score": 1, "id": "flaky-service-pipeline", "lastBookmarkedItem": "ALARM_flaky-service-lambda-errors#2019-12-30T02:47:41.171+0000", "resourceId": "Pipeline_Attribute"
       }
       expect(dynamoPutSpy).toBeCalledWith(expected);
     });
@@ -117,7 +97,7 @@ describe('dynamoStream', () => {
     });
   });
 
-  describe.only('Pipeline_Attribute item', () => {
+  describe('Pipeline_Attribute item', () => {
 
     it('Insert event- should put metrics using the incoming score', async () => {
       let pipelineEvent: DynamoDBStreamEvent = { ...dynamoMockStreamEvent };
@@ -172,6 +152,10 @@ function mockgetPipelineItem(previousScore: number) {
 
 function mockReturnEmptyPipelineItem() {
   getpipelineItemSpy.mockImplementation(jest.fn().mockReturnValue({}));
+}
+
+function mockCreateDBEntry() {
+  dynamoPutSpy.mockImplementation(jest.fn().mockReturnValue({}));
 }
 
 function mockReturn3UnbookedmarkedItems() {
