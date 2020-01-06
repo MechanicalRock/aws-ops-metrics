@@ -1,11 +1,8 @@
 
-import { handler } from '../src/dynamoStream';
 import * as AWSMock from 'aws-sdk-mock';
-import * as AWS from 'aws-sdk';
+import { handler } from '../src/dynamoStream';
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import * as alarmEventStore from '../src/alarmEventStore';
-
-AWSMock.setSDKInstance(AWS);
 
 let dynamoPutSpy;
 let queryUnbookedmarkEventsSpy;

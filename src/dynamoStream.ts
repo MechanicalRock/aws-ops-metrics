@@ -1,12 +1,7 @@
 import { sortItemsByResourceId } from './common';
-import * as AWS from 'aws-sdk';
+import { CloudWatch, config, DynamoDB } from 'aws-sdk';
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { getDbEntryById, queryAllUnbookmaredEvents, createDbEntry } from './alarmEventStore';
-
-
-if (!AWS.config.region) {
-  AWS.config.region = "ap-southeast-2";
-}
 
 export interface payload {
   id: string;
@@ -26,10 +21,10 @@ export const handler = async (event: DynamoDBStreamEvent) => {
     try {
       switch (record.eventName) {
         case 'MODIFY': {
-          const converter = AWS.DynamoDB.Converter.unmarshall;
+          const converter = DynamoDB.Converter.unmarshall;
           if (record.dynamodb.NewImage) {
             const newRecord = converter(record.dynamodb.NewImage);
-            const resourceId = newRecord.id;
+            const resourceId = newRecord.resourceId;
 
             if (resourceId === "Pipeline_Attribute") {
               await putMetric(newRecord);
@@ -40,7 +35,7 @@ export const handler = async (event: DynamoDBStreamEvent) => {
           break;
         }
         case 'INSERT': {
-          const converter = AWS.DynamoDB.Converter.unmarshall;
+          const converter = DynamoDB.Converter.unmarshall;
           if (record.dynamodb.NewImage) {
             const newRecord = converter(record.dynamodb.NewImage);
             const id = newRecord.id;
@@ -108,7 +103,7 @@ async function calculateTheScore(sortedList, pipelineName: string) {
 }
 
 async function putMetric(newRecord) {
-  const cw = new AWS.CloudWatch()
+  const cw = new CloudWatch()
   const pipelineName = newRecord.id;
   //Not sure what should the metrics time be
   const timeStamp = new Date();
