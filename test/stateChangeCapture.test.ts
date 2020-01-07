@@ -20,97 +20,105 @@ describe('stateChangeCapture', () => {
     eventStoreSpy.mockRestore();
   });
 
-  it('should store the event value of -1 in dynamo when state changes from ALARM to OK', async () => {
-    mockGetLastItemFromDynamo("ALARM");
-    await handler(mockCloudwatchEvent);
-    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "EventStore" };
-    expect(dynamoPutSpy).toBeCalledWith(expected);
+  describe('when previous state exists', () => {
+
+    it('should set value to -1 when alarm state changes to OK', async () => {
+      await givenPreviousStateExistsInDynamo("OK", "ALARM");
+      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "EventStore" };
+      expect(dynamoPutSpy).toBeCalledWith(expected);
+
+    })
+
+    it('should set value to 1 when alarm state changes to ALARM', async () => {
+      await givenPreviousStateExistsInDynamo("ALARM", "OK");
+      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "EventStore" };
+      expect(dynamoPutSpy).toBeCalledWith(expected);
+    })
+
+    it('should not store the event when previous and current state are both ALARM', async () => {
+      await givenPreviousStateExistsInDynamo("ALARM", "ALARM");
+      expect(dynamoPutSpy).not.toBeCalled();
+    });
+
+    it('should not store the event when previous and current state are both OK', async () => {
+      await givenPreviousStateExistsInDynamo("OK", "OK");
+      expect(dynamoPutSpy).not.toBeCalled();
+    });
+
   })
 
-  it('should store the event value of 1 in dynamo when state changes from OK to ALARM', async () => {
-    let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
-    mockGetLastItemFromDynamo("OK");
-    alarmStateEvent.detail.state.value = "ALARM";
-    await handler(alarmStateEvent);
-    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "EventStore" };
-    expect(dynamoPutSpy).toBeCalledWith(expected);
+  describe('When no previous dynamo DB record', () => {
+    describe("When state changes", () => {
+      it('should set value to 0 when alarm state is OK', async () => {
+        await givenNoPreviousStateInDynamo("OK", "ALARM");
+        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "OK", "value": 0 }, "TableName": "EventStore" };
+        expect(dynamoPutSpy).toBeCalledWith(expected);
+      })
+
+      it('should set value to 1 when alarm state is ALARM', async () => {
+        await givenNoPreviousStateInDynamo("ALARM", "OK");
+        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "EventStore" };
+        expect(dynamoPutSpy).toBeCalledWith(expected);
+      })
+
+      it('should make api call to retrieve the pipeline name ', async () => {
+        await givenNoPreviousStateInDynamo("ALARM", "OK");
+        expect(codePipelineSpy).toBeCalled();
+      })
+    });
+
+    describe("When state is the same", () => {
+      it('should not make any api calls when current and previous states are both ALARM', async () => {
+        await givenNoPreviousStateInDynamo("ALARM", "ALARM");
+        expect(codePipelineSpy).not.toBeCalled();
+        expect(dynamoPutSpy).not.toBeCalled();
+      })
+      it('should not make any api calls when current and previous states are both OK', async () => {
+        await givenNoPreviousStateInDynamo("OK", "OK");
+        expect(codePipelineSpy).not.toBeCalled();
+        expect(dynamoPutSpy).not.toBeCalled();
+      })
+    })
+
+    it('should ignore the state when it is insufficient data', async () => {
+      await givenNoPreviousStateInDynamo("INSUFFICIENT_DATA", "OK");
+      expect(codePipelineSpy).not.toBeCalled();
+      expect(dynamoPutSpy).not.toBeCalled();
+    })
   })
 
-  it('should not store the event in dynamo when state is still the same', async () => {
-    mockGetLastItemFromDynamo("ALARM");
-    let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
-    alarmStateEvent.detail.state.value = "ALARM";
-    await handler(alarmStateEvent);
-    expect(dynamoPutSpy).not.toBeCalled();
-  });
 
-  it('should find the appropriate pipeline name when previous record does not exist in dynamo ', async () => {
+  async function givenNoPreviousStateInDynamo(currentState: string, prevState: string) {
     let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
     mockReturnEmptyItemFromDynamo();
     let items = [
       {
-        date: '2019-01-01T00:02:30.000Z',
-        state: 'INSUFFICIENT_DATA',
-        oldSate: 'ALARM'
-      },
-      {
         date: '2019-01-02T00:02:30.000Z',
-        state: 'ALARM',
+        state: prevState,
         oldSate: 'INSUFFICIENT_DATA'
       },
       {
         date: '2019-01-03T00:02:30.000Z',
         state: 'INSUFFICIENT_DATA',
-        oldSate: 'ALARM'
+        oldSate: prevState
       },
       {
         date: '2019-01-04T00:02:30.000Z',
-        state: 'OK',
+        state: currentState,
         oldSate: 'INSUFFICIENT_DATA'
       }
     ]
     mockCloudwatchHistory(items);
-    alarmStateEvent.detail.state.value = "OK";
+    alarmStateEvent.detail.state.value = currentState;
     await handler(alarmStateEvent);
-    expect(codePipelineSpy).toBeCalled();
-    var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "EventStore" };
-    expect(dynamoPutSpy).toBeCalledWith(expected);
-  })
+  }
 
-  it('should retrieve the previouse state from cloudwatch history if there is no item in dynamo', async () => {
-    let items = [
-      {
-        date: '2019-01-01T00:02:30.000Z',
-        state: 'INSUFFICIENT_DATA',
-        oldSate: 'ALARM'
-      },
-      {
-        date: '2019-01-02T00:02:30.000Z',
-        state: 'ALARM',
-        oldSate: 'INSUFFICIENT_DATA'
-      },
-      {
-        date: '2019-01-03T00:02:30.000Z',
-        state: 'INSUFFICIENT_DATA',
-        oldSate: 'ALARM'
-      }
-    ]
-    mockCloudwatchHistory(items);
-    mockReturnEmptyItemFromDynamo();
-
+  async function givenPreviousStateExistsInDynamo(currentState: string, prevState: string) {
     let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
-    alarmStateEvent.detail.state.value = "ALARM";
+    mockGetLastItemFromDynamo(prevState);
+    alarmStateEvent.detail.state.value = currentState;
     await handler(alarmStateEvent);
-    expect(codePipelineSpy).not.toBeCalled();
-    expect(dynamoPutSpy).not.toBeCalled();
-  });
-
-  it('should ignore the state when it is insufficient data', async () => {
-    let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
-    alarmStateEvent.detail.state.value = "INSUFFICIENT_DATA";
-    await handler(alarmStateEvent);
-    expect(dynamoPutSpy).not.toBeCalled();
-  })
+  }
 
   function setup() {
     dynamoPutSpy = jest.fn().mockReturnValue({});

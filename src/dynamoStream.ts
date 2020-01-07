@@ -103,8 +103,8 @@ async function calculateTheScore(sortedList, pipelineName: string) {
 async function putMetric(newRecord) {
   const cw = new CloudWatch()
   const pipelineName = newRecord.id;
-  //Not sure what should the metrics time be
   const timeStamp = new Date();
+
   await cw.putMetricData({
     MetricData: [
       {

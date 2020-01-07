@@ -16,17 +16,27 @@ export class StateChangeCapture {
 
     if (stateChanged) {
       const pipelineName = await this.findPipelineName(event);
-      const value = event.detail.state.value === "ALARM" ? 1 : -1;
+      const score = this.getScore(event.detail.state.value);
       const payload = {
         id: `ALARM_${event.detail.alarmName}`,
         resourceId: `${event.detail.state.timestamp}`,
         pipelineName: pipelineName,
         bookmarked: "N",
-        value: value,
+        value: score,
         state: event.detail.state.value
       }
       await createDbEntry(payload)
     }
+  }
+
+  private getScore(alarmState) {
+    if (alarmState === "OK") {
+      if (this.state && this.state.lastStateItemInDynamo) {
+        return (-1)
+      }
+      return 0;
+    }
+    return 1;
   }
 
   private async hasStatusChanged(event: CloudwatchStateChangeEvent) {
@@ -44,9 +54,6 @@ export class StateChangeCapture {
     }
     console.log("Dynamo state was undefined");
 
-    ///TODO: Discuss to see if this is required?
-    // If the item doesn't exist in dynamo we might just wanna store it for first time
-    // If it's first time and status is OK, you may wanna add 0 instead of -1
     const alarmHistory = await cw.describeAlarmHistory({
       AlarmName: event.detail.alarmName,
       HistoryItemType: "StateUpdate",
