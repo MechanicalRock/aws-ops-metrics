@@ -1,5 +1,5 @@
 import { sortItemsByResourceId } from './common';
-import { CloudWatch, config, DynamoDB } from 'aws-sdk';
+import { CloudWatch, DynamoDB } from 'aws-sdk';
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { getDbEntryById, queryAllUnbookmaredEvents, createDbEntry } from './alarmEventStore';
 

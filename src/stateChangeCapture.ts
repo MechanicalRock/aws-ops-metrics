@@ -1,15 +1,10 @@
-import * as AWS from 'aws-sdk';
+import { DynamoDB, CloudWatch, CodePipeline } from 'aws-sdk';
 import { CloudwatchStateChangeEvent } from "./common";
-import { metricTimestampFromAlarmEvent } from './cloudwatchAlarmEvent';
 import { hasStateChanged } from './alarmHistory';
 import { createDbEntry, getLastItemById } from './alarmEventStore';
 
-if (!AWS.config.region) {
-  AWS.config.region = "ap-southeast-2";
-}
-
 export interface ILastItemState {
-  lastStateItemInDynamo: AWS.DynamoDB.DocumentClient.AttributeMap | null;
+  lastStateItemInDynamo: DynamoDB.DocumentClient.AttributeMap | null;
 }
 
 export class StateChangeCapture {
@@ -35,7 +30,7 @@ export class StateChangeCapture {
   }
 
   private async hasStatusChanged(event: CloudwatchStateChangeEvent) {
-    const cw = new AWS.CloudWatch();
+    const cw = new CloudWatch();
     if (event.detail.state.value === "INSUFFICIENT_DATA") {
       return false;
     }
@@ -56,7 +51,6 @@ export class StateChangeCapture {
       AlarmName: event.detail.alarmName,
       HistoryItemType: "StateUpdate",
     }).promise();
-    console.log("Alarm history: ", alarmHistory);
     if (hasStateChanged(alarmHistory)) {
       console.log("State has changed");
       return true;
@@ -86,7 +80,7 @@ export class StateChangeCapture {
   }
 
   private async getPipelineNames() {
-    const codePipeline = new AWS.CodePipeline();
+    const codePipeline = new CodePipeline();
     try {
       const response = await codePipeline.listPipelines().promise();
       return response.pipelines ? response.pipelines.map(m => m.name) : [];
