@@ -43,10 +43,8 @@ export const handler = async (event: DynamoDBStreamEvent) => {
               await updatePipelineScore(newRecord);
               break
             }
-            console.log("Here, before if");
             const resourceId = newRecord.resourceId;
             if (resourceId === "Pipeline_Attribute") {
-              console.log("Here, inside if");
               await putMetric(newRecord);
               break
             }
@@ -107,7 +105,6 @@ async function putMetric(newRecord) {
   const pipelineName = newRecord.id;
   //Not sure what should the metrics time be
   const timeStamp = new Date();
-  console.log("Here, trying to put metric");
   await cw.putMetricData({
     MetricData: [
       {
