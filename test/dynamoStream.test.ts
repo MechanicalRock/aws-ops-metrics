@@ -9,20 +9,10 @@ let queryUnbookedmarkEventsSpy;
 let getpipelineItemSpy;
 let cloudWatchMetricSpy;
 
-
 describe('dynamoStream', () => {
 
   beforeEach(async () => {
-    cloudWatchMetricSpy = jest.fn().mockReturnValue({});
-    queryUnbookedmarkEventsSpy = jest.spyOn(alarmEventStore, "queryAllUnbookmaredEvents");
-    dynamoPutSpy = jest.spyOn(alarmEventStore, "createDbEntry");
-    getpipelineItemSpy = jest.spyOn(alarmEventStore, "getDbEntryById");
-    process.env.TABLE_NAME = "EventStore";
-    mockCreateDBEntry();
-
-    AWSMock.mock("CloudWatch", "putMetricData", (params, callback) => {
-      callback(null, cloudWatchMetricSpy(params));
-    });
+    setup();
   });
 
   afterEach(() => {
@@ -140,6 +130,19 @@ describe('dynamoStream', () => {
     });
   });
 });
+
+function setup() {
+  cloudWatchMetricSpy = jest.fn().mockReturnValue({});
+  queryUnbookedmarkEventsSpy = jest.spyOn(alarmEventStore, "queryAllUnbookmaredEvents");
+  dynamoPutSpy = jest.spyOn(alarmEventStore, "createDbEntry");
+  getpipelineItemSpy = jest.spyOn(alarmEventStore, "getDbEntryById");
+  process.env.TABLE_NAME = "EventStore";
+  mockCreateDBEntry();
+
+  AWSMock.mock("CloudWatch", "putMetricData", (params, callback) => {
+    callback(null, cloudWatchMetricSpy(params));
+  });
+}
 
 function mockgetPipelineItem(previousScore: number) {
   getpipelineItemSpy.mockImplementation(jest.fn().mockReturnValue(
