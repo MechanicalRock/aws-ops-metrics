@@ -109,14 +109,14 @@ Resources:
           Type: DynamoDB
           Properties:
             Stream:
-              'Fn::GetAtt':
+              "Fn::GetAtt":
                 - EventStoreDynamoTable
                 - StreamArn
             StartingPosition: TRIM_HORIZON
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
-            TableName: EventStore
+            TableName: MetricsEventStore
 
   StateChangeHandler:
     Type: "AWS::Serverless::Function"
@@ -127,7 +127,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          TABLE_NAME: EventStore
+          TABLE_NAME: MetricsEventStore
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
@@ -139,7 +139,7 @@ Resources:
                 - "CloudWatch Alarm State Change"
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: EventStore
+            TableName: MetricsEventStore
         - !Ref ListPipelinePolicy
         - !Ref DescribeAlarmPolicy
 
@@ -162,40 +162,40 @@ Resources:
   EventStoreDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: EventStore
+      TableName: MetricsEventStore
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: 'id'
-          AttributeType: 'S'
-        - AttributeName: 'resourceId'
-          AttributeType: 'S'
-        - AttributeName: 'pipelineName'
-          AttributeType: 'S'
-        - AttributeName: 'bookmarked'
-          AttributeType: 'S'
+        - AttributeName: "id"
+          AttributeType: "S"
+        - AttributeName: "resourceId"
+          AttributeType: "S"
+        - AttributeName: "pipelineName"
+          AttributeType: "S"
+        - AttributeName: "bookmarked"
+          AttributeType: "S"
       KeySchema:
-        - AttributeName: 'id'
+        - AttributeName: "id"
           KeyType: HASH
-        - AttributeName: 'resourceId'
-          KeyType: 'RANGE'
+        - AttributeName: "resourceId"
+          KeyType: "RANGE"
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
-        - IndexName: 'resourceId-id-index'
+        - IndexName: "resourceId-id-index"
           KeySchema:
-            - AttributeName: 'resourceId'
+            - AttributeName: "resourceId"
               KeyType: HASH
-            - AttributeName: 'id'
+            - AttributeName: "id"
               KeyType: RANGE
           Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'pipelineName-index'
+            ProjectionType: "ALL"
+        - IndexName: "pipelineName-index"
           KeySchema:
-            - AttributeName: 'pipelineName'
+            - AttributeName: "pipelineName"
               KeyType: HASH
-            - AttributeName: 'bookmarked'
+            - AttributeName: "bookmarked"
               KeyType: RANGE
           Projection:
-            ProjectionType: 'ALL'
+            ProjectionType: "ALL"
