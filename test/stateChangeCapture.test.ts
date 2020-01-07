@@ -9,7 +9,7 @@ describe('stateChangeCapture', () => {
   let eventStoreSpy;
   let codePipelineSpy;
   let alarmHistory: AlarmHistoryItems;
-  process.env.TABLE_NAME = "EventStore";
+  process.env.TABLE_NAME = "MetricsEventStore";
 
   beforeEach(() => {
     setup();
@@ -24,14 +24,14 @@ describe('stateChangeCapture', () => {
 
     it('should set value to -1 when alarm state changes to OK', async () => {
       await givenPreviousStateExistsInDynamo("OK", "ALARM");
-      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "EventStore" };
+      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "MetricsEventStore" };
       expect(dynamoPutSpy).toBeCalledWith(expected);
 
     })
 
     it('should set value to 1 when alarm state changes to ALARM', async () => {
       await givenPreviousStateExistsInDynamo("ALARM", "OK");
-      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "EventStore" };
+      var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "MetricsEventStore" };
       expect(dynamoPutSpy).toBeCalledWith(expected);
     })
 
@@ -51,13 +51,13 @@ describe('stateChangeCapture', () => {
     describe("When state changes", () => {
       it('should set value to 0 when alarm state is OK', async () => {
         await givenNoPreviousStateInDynamo("OK", "ALARM");
-        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "OK", "value": 0 }, "TableName": "EventStore" };
+        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "OK", "value": 0 }, "TableName": "MetricsEventStore" };
         expect(dynamoPutSpy).toBeCalledWith(expected);
       })
 
       it('should set value to 1 when alarm state is ALARM', async () => {
         await givenNoPreviousStateInDynamo("ALARM", "OK");
-        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "EventStore" };
+        var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "MetricsEventStore" };
         expect(dynamoPutSpy).toBeCalledWith(expected);
       })
 
