@@ -23,25 +23,25 @@ describe('stateChangeCapture', () => {
   describe('when previous state exists', () => {
 
     it('should set value to -1 when alarm state changes to OK', async () => {
-      await givenPreviousStateExistsInDynamo("OK", "ALARM");
+      await whenHandlerInvoked(givenPreviousStateExistsInDynamo("OK", "ALARM"));
       var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "OK", "value": -1 }, "TableName": "MetricsEventStore" };
       expect(dynamoPutSpy).toBeCalledWith(expected);
 
     })
 
     it('should set value to 1 when alarm state changes to ALARM', async () => {
-      await givenPreviousStateExistsInDynamo("ALARM", "OK");
+      await whenHandlerInvoked(givenPreviousStateExistsInDynamo("ALARM", "OK"));
       var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "pipeline5", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "MetricsEventStore" };
       expect(dynamoPutSpy).toBeCalledWith(expected);
     })
 
     it('should not store the event when previous and current state are both ALARM', async () => {
-      await givenPreviousStateExistsInDynamo("ALARM", "ALARM");
+      await whenHandlerInvoked(givenPreviousStateExistsInDynamo("ALARM", "ALARM"));
       expect(dynamoPutSpy).not.toBeCalled();
     });
 
     it('should not store the event when previous and current state are both OK', async () => {
-      await givenPreviousStateExistsInDynamo("OK", "OK");
+      await whenHandlerInvoked(givenPreviousStateExistsInDynamo("OK", "OK"));
       expect(dynamoPutSpy).not.toBeCalled();
     });
 
@@ -50,45 +50,45 @@ describe('stateChangeCapture', () => {
   describe('When no previous dynamo DB record', () => {
     describe("When state changes", () => {
       it('should set value to 0 when alarm state is OK', async () => {
-        await givenNoPreviousStateInDynamo("OK", "ALARM");
+        await whenHandlerInvoked(givenNoPreviousStateInDynamo("OK", "ALARM"));
         var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "OK", "value": 0 }, "TableName": "MetricsEventStore" };
         expect(dynamoPutSpy).toBeCalledWith(expected);
       })
 
       it('should set value to 1 when alarm state is ALARM', async () => {
-        await givenNoPreviousStateInDynamo("ALARM", "OK");
+        await whenHandlerInvoked(givenNoPreviousStateInDynamo("ALARM", "OK"));
         var expected = { "Item": { "id": "ALARM_flaky-service", "resourceId": "2019-12-12T06:25:41.200+0000", "pipelineName": "flaky-service-pipeline", "bookmarked": "N", "state": "ALARM", "value": 1 }, "TableName": "MetricsEventStore" };
         expect(dynamoPutSpy).toBeCalledWith(expected);
       })
 
       it('should make api call to retrieve the pipeline name ', async () => {
-        await givenNoPreviousStateInDynamo("ALARM", "OK");
+        await whenHandlerInvoked(givenNoPreviousStateInDynamo("ALARM", "OK"));
         expect(codePipelineSpy).toBeCalled();
       })
     });
 
     describe("When state is the same", () => {
       it('should not make any api calls when current and previous states are both ALARM', async () => {
-        await givenNoPreviousStateInDynamo("ALARM", "ALARM");
+        await whenHandlerInvoked(givenNoPreviousStateInDynamo("ALARM", "ALARM"));
         expect(codePipelineSpy).not.toBeCalled();
         expect(dynamoPutSpy).not.toBeCalled();
       })
       it('should not make any api calls when current and previous states are both OK', async () => {
-        await givenNoPreviousStateInDynamo("OK", "OK");
+        await whenHandlerInvoked(givenNoPreviousStateInDynamo("OK", "OK"));
         expect(codePipelineSpy).not.toBeCalled();
         expect(dynamoPutSpy).not.toBeCalled();
       })
     })
 
     it('should ignore the state when it is insufficient data', async () => {
-      await givenNoPreviousStateInDynamo("INSUFFICIENT_DATA", "OK");
+      await whenHandlerInvoked(givenNoPreviousStateInDynamo("INSUFFICIENT_DATA", "OK"));
       expect(codePipelineSpy).not.toBeCalled();
       expect(dynamoPutSpy).not.toBeCalled();
     })
   })
 
 
-  async function givenNoPreviousStateInDynamo(currentState: string, prevState: string) {
+  function givenNoPreviousStateInDynamo(currentState: string, prevState: string) {
     let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
     mockReturnEmptyItemFromDynamo();
     let items = [
@@ -110,14 +110,18 @@ describe('stateChangeCapture', () => {
     ]
     mockCloudwatchHistory(items);
     alarmStateEvent.detail.state.value = currentState;
+    return alarmStateEvent;
+  }
+
+  async function whenHandlerInvoked(alarmStateEvent: CloudwatchStateChangeEvent) {
     await handler(alarmStateEvent);
   }
 
-  async function givenPreviousStateExistsInDynamo(currentState: string, prevState: string) {
+  function givenPreviousStateExistsInDynamo(currentState: string, prevState: string) {
     let alarmStateEvent: CloudwatchStateChangeEvent = { ...mockCloudwatchEvent };
     mockGetLastItemFromDynamo(prevState);
     alarmStateEvent.detail.state.value = currentState;
-    await handler(alarmStateEvent);
+    return alarmStateEvent;
   }
 
   function setup() {
