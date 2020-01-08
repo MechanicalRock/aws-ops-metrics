@@ -1,15 +1,10 @@
-import * as AWS from 'aws-sdk';
+import { DynamoDB, CloudWatch, CodePipeline } from 'aws-sdk';
 import { CloudwatchStateChangeEvent } from "./common";
-import { metricTimestampFromAlarmEvent } from './cloudwatchAlarmEvent';
 import { hasStateChanged } from './alarmHistory';
 import { createDbEntry, getLastItemById } from './alarmEventStore';
 
-if (!AWS.config.region) {
-  AWS.config.region = "ap-southeast-2";
-}
-
 export interface ILastItemState {
-  lastStateItemInDynamo: AWS.DynamoDB.DocumentClient.AttributeMap | null;
+  lastStateItemInDynamo: DynamoDB.DocumentClient.AttributeMap | null;
 }
 
 export class StateChangeCapture {
@@ -21,22 +16,31 @@ export class StateChangeCapture {
 
     if (stateChanged) {
       const pipelineName = await this.findPipelineName(event);
-      const value = event.detail.state.value === "ALARM" ? 1 : -1;
+      const score = this.getScore(event.detail.state.value);
       const payload = {
         id: `ALARM_${event.detail.alarmName}`,
         resourceId: `${event.detail.state.timestamp}`,
         pipelineName: pipelineName,
         bookmarked: "N",
-        value: value,
-        state: event.detail.state.value,
-        eventTime: event.detail.state.timestamp
+        value: score,
+        state: event.detail.state.value
       }
       await createDbEntry(payload)
     }
   }
 
+  private getScore(alarmState) {
+    if (alarmState === "OK") {
+      if (this.state && this.state.lastStateItemInDynamo) {
+        return (-1)
+      }
+      return 0;
+    }
+    return 1;
+  }
+
   private async hasStatusChanged(event: CloudwatchStateChangeEvent) {
-    const cw = new AWS.CloudWatch();
+    const cw = new CloudWatch();
     if (event.detail.state.value === "INSUFFICIENT_DATA") {
       return false;
     }
@@ -50,14 +54,10 @@ export class StateChangeCapture {
     }
     console.log("Dynamo state was undefined");
 
-    ///TODO: Discuss to see if this is required?
-    // If the item doesn't exist in dynamo we might just wanna store it for first time
-    // If it's first time and status is OK, you may wanna add 0 instead of -1
     const alarmHistory = await cw.describeAlarmHistory({
       AlarmName: event.detail.alarmName,
       HistoryItemType: "StateUpdate",
     }).promise();
-    console.log("Alarm history: ", alarmHistory);
     if (hasStateChanged(alarmHistory)) {
       console.log("State has changed");
       return true;
@@ -87,7 +87,7 @@ export class StateChangeCapture {
   }
 
   private async getPipelineNames() {
-    const codePipeline = new AWS.CodePipeline();
+    const codePipeline = new CodePipeline();
     try {
       const response = await codePipeline.listPipelines().promise();
       return response.pipelines ? response.pipelines.map(m => m.name) : [];
