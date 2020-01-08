@@ -188,20 +188,25 @@ describe('stateChangeCapture', () => {
   }
 
   function mockGetLastItemFromDynamo(prevState: string) {
-    eventStoreSpy.mockImplementation(jest.fn().mockReturnValue({
-      Items:
-        [{
-          id: 'flaky-service',
-          resourceId: '2019-12-12T06:25:41.200+0000',
-          pipelineName: 'pipeline5',
-          value: -1,
-          state: prevState
-        }],
-      Count: 1,
-      ScannedCount: 1,
-      LastEvaluatedKey: { id: 'flaky-service', resourceId: '1577082070_pipeline8' }
+    eventStoreSpy.mockImplementation((params) => {
+      if (params !== "ALARM_flaky-service") {
+        throw new Error("Incorrect parameter is passed to getLastItemById query");
+      }
+      return {
+        Items:
+          [{
+            id: 'ALARM_flaky-service',
+            resourceId: '2019-12-12T06:25:41.200+0000',
+            pipelineName: 'pipeline5',
+            value: -1,
+            state: prevState
+          }],
+        Count: 1,
+        ScannedCount: 1,
+        LastEvaluatedKey: { id: 'ALARM_flaky-service', resourceId: '1577082070_pipeline8' }
+      }
     }
-    ));
+    );
   }
 
   function mockReturnEmptyItemFromDynamo() {
