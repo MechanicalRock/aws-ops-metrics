@@ -79,7 +79,7 @@ export class StateChangeCapture {
   }
 
   private async getPreviousStateFromDynamo(event: CloudwatchStateChangeEvent) {
-    const data = await getLastItemById(event.detail.alarmName);
+    const data = await getLastItemById("ALARM_" + event.detail.alarmName);
     this.state.lastStateItemInDynamo = data.Items && data.Items.length > 0 ? data.Items[0] : null;
     let prevState = data.Items && data.Items.length > 0 ? data.Items[0].state : null
 
