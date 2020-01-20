@@ -42,7 +42,7 @@ describe('stateChangeCapture', () => {
       await whenHandlerInvoked(givenPreviousStateExistsInDynamo('OK', 'ALARM'));
       var expected = {
         Item: {
-          id: 'ALARM_flaky-service',
+          id: 'ALARM_flaky-service-alarm',
           resourceId: '2019-12-12T06:25:41.200+0000',
           pipelineName: 'pipeline5',
           bookmarked: 'N',
@@ -58,7 +58,7 @@ describe('stateChangeCapture', () => {
       await whenHandlerInvoked(givenPreviousStateExistsInDynamo('ALARM', 'OK'));
       var expected = {
         Item: {
-          id: 'ALARM_flaky-service',
+          id: 'ALARM_flaky-service-alarm',
           resourceId: '2019-12-12T06:25:41.200+0000',
           pipelineName: 'pipeline5',
           bookmarked: 'N',
@@ -87,7 +87,7 @@ describe('stateChangeCapture', () => {
         await whenHandlerInvoked(givenNoPreviousStateInDynamo('OK', 'ALARM'));
         var expected = {
           Item: {
-            id: 'ALARM_flaky-service',
+            id: 'ALARM_flaky-service-alarm',
             resourceId: '2019-12-12T06:25:41.200+0000',
             pipelineName: 'flaky-service',
             bookmarked: 'N',
@@ -103,7 +103,27 @@ describe('stateChangeCapture', () => {
         await whenHandlerInvoked(givenNoPreviousStateInDynamo('ALARM', 'OK'));
         var expected = {
           Item: {
-            id: 'ALARM_flaky-service',
+            id: 'ALARM_flaky-service-alarm',
+            resourceId: '2019-12-12T06:25:41.200+0000',
+            pipelineName: 'flaky-service',
+            bookmarked: 'N',
+            state: 'ALARM',
+            value: 1,
+          },
+          TableName: 'MetricsEventStore',
+        };
+        expect(dynamoPutSpy).toBeCalledWith(expected);
+      });
+
+      it('should still find the correct pipeline name when alarmName has prefix', async () => {
+        const alarmStateEvent: CloudwatchStateChangeEvent = {
+          ...givenNoPreviousStateInDynamo('ALARM', 'OK'),
+        };
+        alarmStateEvent.detail.alarmName = 'flaky-service-dynamodb-health-monitoring';
+        await whenHandlerInvoked(alarmStateEvent);
+        var expected = {
+          Item: {
+            id: 'ALARM_flaky-service-dynamodb-health-monitoring',
             resourceId: '2019-12-12T06:25:41.200+0000',
             pipelineName: 'flaky-service',
             bookmarked: 'N',
@@ -182,7 +202,7 @@ describe('stateChangeCapture', () => {
     codePipelineSpy = jest.fn().mockReturnValue({
       pipelines: [
         {
-          name: 'flaky-service-pipeline',
+          name: 'flaky-service-pipeline12345',
           version: 1,
           created: '2019-12-27T07:37:13.986Z',
           updated: '2019-12-27T07:37:13.986Z',
@@ -240,13 +260,13 @@ describe('stateChangeCapture', () => {
 
   function mockGetLastItemFromDynamo(prevState: string) {
     eventStoreSpy.mockImplementation(params => {
-      if (params !== 'ALARM_flaky-service') {
+      if (params !== 'ALARM_flaky-service-alarm') {
         throw new Error('Incorrect parameter is passed to getLastItemById query');
       }
       return {
         Items: [
           {
-            id: 'ALARM_flaky-service',
+            id: 'ALARM_flaky-service-alarm',
             resourceId: '2019-12-12T06:25:41.200+0000',
             pipelineName: 'pipeline5',
             value: -1,
@@ -272,7 +292,7 @@ describe('stateChangeCapture', () => {
 });
 
 const alarmDetail = {
-  alarmName: 'flaky-service',
+  alarmName: 'flaky-service-alarm',
   state: {
     value: 'OK',
     reason:

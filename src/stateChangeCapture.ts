@@ -102,7 +102,7 @@ export class StateChangeCapture {
     const pipelineNames = await this.getPipelineNames();
     const pipelineName = pipelineNames
       ? pipelineNames.find(name =>
-          name ? name.toLowerCase().includes(event.detail.alarmName.toLowerCase()) : false,
+          name ? event.detail.alarmName.toLowerCase().includes(name.toLowerCase()) : false,
         )
       : '';
     if (!pipelineName) {
