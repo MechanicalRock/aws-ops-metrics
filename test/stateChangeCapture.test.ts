@@ -31,6 +31,10 @@ describe('stateChangeCapture', () => {
       'foo-codePipeline0987655',
       'foo_codePipeline',
       'foo_codePipeline876tghujn',
+      'foo-cnf-pipeline',
+      'foo-cnf-pipeline1234345jkdk',
+      'foo_cnf-pipeline1234345jkdk',
+      'foo_cnf_pipeline1234345jkdk',
     ];
     it.each(examples)('should return clean pipeline name', example => {
       expect(sanitizePipelineName(example)).toEqual('foo');

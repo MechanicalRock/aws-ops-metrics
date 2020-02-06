@@ -9,7 +9,7 @@ export interface LastItemState {
 
 export function sanitizePipelineName(pipelineName: string | undefined): string {
   if (pipelineName) {
-    let matchResult = pipelineName.split('-pipeline');
+    let matchResult = pipelineName.split('_codePipeline');
     if (matchResult.length > 1) {
       return matchResult[0];
     }
@@ -17,14 +17,27 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
     if (matchResult.length > 1) {
       return matchResult[0];
     }
+    matchResult = pipelineName.split('_cnf_pipeline');
+    if (matchResult.length > 1) {
+      return matchResult[0];
+    }
+    matchResult = pipelineName.split('-cnf-pipeline');
+    if (matchResult.length > 1) {
+      return matchResult[0];
+    }
+    matchResult = pipelineName.split('_cnf-pipeline');
+    if (matchResult.length > 1) {
+      return matchResult[0];
+    }
+    matchResult = pipelineName.split('-pipeline');
+    if (matchResult.length > 1) {
+      return matchResult[0];
+    }
     matchResult = pipelineName.split('_pipeline');
     if (matchResult.length > 1) {
       return matchResult[0];
     }
-    matchResult = pipelineName.split('_codePipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
+
     return pipelineName;
   }
   return '';
