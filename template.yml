@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: 'Create service-health-metrics based on cloudwatch alarms.'
 
+Parameters:
+  SanitisePattern:
+    Description: 'comma delimited list of patterns to use to sanitise pipeline names.  Strips the pipeline name to characters before the matching patter.  Example pipeline with name "foo-pipeline123" and sanitise pattern "-pipeline" will be reported as "foo"'
+    Type: CommaDelimitedList
+    Default: "-pipeline"
+    AllowedPattern: [a-zA-Z_\\-]+(,[a-zA-Z_\\-]+)*
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: mechanicalrock-ops-metrics
