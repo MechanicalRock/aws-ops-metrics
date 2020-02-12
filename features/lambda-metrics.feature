@@ -18,6 +18,45 @@ Feature: Lambda Metrics
   -  Alarm state will never be reported the same twice in a row (not a change)
   - INSUFFICIENT_DATA should be ignored
 
+  Scenario: Account level metrics should be generated
+    Given CloudWatch alarm "foo-service-health" has the following history:
+      | date                     | state | oldSate           |
+      | 2019-01-01T00:01:30.000Z | ALARM | OK                |
+      | 2019-01-01T00:00:00.000Z | OK    | INSUFFICIENT_DATA |
+    When CloudWatch alarm state changes to OK at "2019-01-01T01:01:30.000Z"
+    Then the following CloudWatch metric should be generated:
+      """
+      {
+        "MetricData": [
+          {
+            "MetricName": "MTTR",
+            "Dimensions": [
+              {
+                "Name": "service",
+                "Value": "foo-service-health"
+              }
+            ],
+            "Timestamp": "2019-01-01T01:01:30.000Z",
+            "Value": 3600,
+            "Unit": "Seconds"
+          },
+          {
+            "MetricName": "MTTR",
+            "Dimensions": [
+              {
+                "Name": "account",
+                "Value": "12345"
+              }
+            ],
+            "Timestamp": "2019-01-01T01:01:30.000Z",
+            "Value": 3600,
+            "Unit": "Seconds"
+          }
+        ],
+        "Namespace": "Operations"
+      }
+      """
+
   Scenario: Service Fails
     Given CloudWatch alarm "foo" has the following history:
       | date                     | state | oldSate           |

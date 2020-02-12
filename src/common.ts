@@ -1,14 +1,15 @@
-import { CloudWatch } from "aws-sdk";
-import { AlarmState, secondsBetweenFromHistory, hasStateChanged } from "./alarmHistory";
+import { CloudWatch } from 'aws-sdk';
+import { AlarmState, secondsBetweenFromHistory, hasStateChanged } from './alarmHistory';
 import {
-  alarmNameFromAlarmEvent, isAlarmEventForState,
+  alarmNameFromAlarmEvent,
+  isAlarmEventForState,
   metricTimestampFromAlarmEvent,
-} from "./cloudwatchAlarmEvent";
+} from './cloudwatchAlarmEvent';
 
 export interface CloudwatchStateChangeEvent {
   version: string;
   id: string;
-  "detail-type": string;
+  'detail-type': string;
   source: string;
   account: string;
   time: string;
@@ -21,13 +22,13 @@ export interface CloudwatchStateChangeEvent {
       reason: string;
       reasonData: string;
       timestamp: string;
-    },
+    };
     previousState: {
       value: string;
       reason: string;
       reasonData: string;
       timestamp: string;
-    },
+    };
     configuration: {
       description: string;
       metrics?: [
@@ -39,31 +40,30 @@ export interface CloudwatchStateChangeEvent {
               name: string;
               dimensions: {
                 FunctionName: string;
-              }
-            },
+              };
+            };
             period: number;
             stat: string;
-          },
+          };
           returnData: boolean;
-        }
-      ]
-    }
-  }
+        },
+      ];
+    };
+  };
 }
 
 export function sortItemsByResourceId(items: AWS.DynamoDB.DocumentClient.QueryOutput) {
   if (items.Items) {
-    var sortedlist = items.Items.sort((a, b) => (a.resourceId > b.resourceId) ? 1 : -1);
+    const sortedlist = items.Items.sort((a, b) => (a.resourceId > b.resourceId ? 1 : -1));
     return sortedlist;
   }
   return [];
 }
 
 export function calculateMetric(metric: string, newState: AlarmState, oldState: AlarmState) {
-
   return async (event: CloudwatchStateChangeEvent) => {
     const cw = new CloudWatch();
-    console.debug("Event received: " + JSON.stringify(event));
+    console.debug('Event received: ' + JSON.stringify(event));
     if (!isAlarmEventForState(event, newState)) {
       console.debug(`State '${newState}' not matched for event. Ignoring`);
       return {};
@@ -73,39 +73,56 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
     const service = alarmNameFromAlarmEvent(event);
     let duration = 0;
     try {
-      const alarmHistory = await cw.describeAlarmHistory({
-        AlarmName: service,
-        HistoryItemType: "StateUpdate",
-      }).promise();
+      const alarmHistory = await cw
+        .describeAlarmHistory({
+          AlarmName: service,
+          HistoryItemType: 'StateUpdate',
+        })
+        .promise();
       if (!hasStateChanged(alarmHistory)) {
         return {};
       }
       duration = secondsBetweenFromHistory(alarmHistory, newState, oldState);
       console.info(`Publishing ${metric}: ${duration}`);
-
-      await cw.putMetricData({
+      const metricInput = {
         MetricData: [
           {
             MetricName: metric,
             Dimensions: [
               {
-                Name: "service",
+                Name: 'service',
                 Value: service,
               },
             ],
             Timestamp: metricTime,
             Value: duration,
-            Unit: "Seconds",
+            Unit: 'Seconds',
           },
         ],
-        Namespace: "Operations",
-      }).promise();
+        Namespace: 'Operations',
+      };
+
+      if (service.endsWith('-service-health')) {
+        metricInput.MetricData.push({
+          MetricName: metric,
+          Dimensions: [
+            {
+              Name: 'account',
+              Value: event.account,
+            },
+          ],
+          Timestamp: metricTime,
+          Value: duration,
+          Unit: 'Seconds',
+        });
+      }
+
+      await cw.putMetricData(metricInput).promise();
     } catch (err) {
       console.warn(`Failed to generate metric: ${err}`);
 
       // ignore
       return {};
     }
-
   };
 }

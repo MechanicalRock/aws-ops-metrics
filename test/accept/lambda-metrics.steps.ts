@@ -1,44 +1,47 @@
-import * as AWS from "aws-sdk-mock";
-import { AlarmHistoryItem, AlarmHistoryItems } from "aws-sdk/clients/cloudwatch";
-import { defineFeature, loadFeature } from "jest-cucumber";
-import { handler as mtbf } from "../../src/mtbf";
-import { handler as mttf } from "../../src/mttf";
-import { handler as mttr } from "../../src/mttr";
+import * as AWS from 'aws-sdk-mock';
+import { AlarmHistoryItem, AlarmHistoryItems } from 'aws-sdk/clients/cloudwatch';
+import { defineFeature, loadFeature } from 'jest-cucumber';
+import { handler as mtbf } from '../../src/mtbf';
+import { handler as mttf } from '../../src/mttf';
+import { handler as mttr } from '../../src/mttr';
 import { CloudwatchStateChangeEvent } from '../../src/common';
+const feature = loadFeature('./features/lambda-metrics.feature');
 
-const feature = loadFeature("./features/lambda-metrics.feature");
-
-defineFeature(feature, (test) => {
-
+defineFeature(feature, test => {
   let alarmHistory: AlarmHistoryItems;
   let alarmName;
   let cloudWatchSpy;
 
   beforeEach(async () => {
     cloudWatchSpy = jest.fn().mockReturnValue({});
-    alarmHistory = []
-    AWS.mock("CloudWatch", "putMetricData", (params, callback) => {
+    alarmHistory = [];
+    AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
+      console.log('Params are: ', JSON.stringify(params));
       callback(null, cloudWatchSpy(params));
     });
-
   });
 
   afterEach(() => {
     AWS.restore();
   });
 
-  test("Service Fails", ({ given, when, then }) => {
-
+  test('Service Fails', ({ given, when, then }) => {
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
 
     thenCloudWatchMetricShouldBeGenerated(then);
-
   });
 
-  test("Service Restored", ({ given, when, then }) => {
+  test('Service Restored', ({ given, when, then }) => {
+    givenCloudWatchAlarmHasHistory(given);
 
+    whenCloudWatchAlarmStateChanges(when);
+
+    thenCloudWatchMetricShouldBeGenerated(then);
+  });
+
+  test.only('Account level metrics should be generated', ({ given, when, then }) => {
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
@@ -52,20 +55,17 @@ defineFeature(feature, (test) => {
     whenCloudWatchAlarmStateChanges(when);
 
     thenCloudWatchMetricShouldNotBeGenerated(then);
-
   });
 
-  test("Service Fails Again", ({ given, when, then }) => {
+  test('Service Fails Again', ({ given, when, then }) => {
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
 
     thenCloudWatchMetricShouldBeGenerated(then);
-
   });
 
   test('no-data/state change for extended period', ({ given, when, then }) => {
-
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
@@ -74,7 +74,6 @@ defineFeature(feature, (test) => {
   });
 
   test('Service Restored - ignoring Insufficient', ({ given, when, then }) => {
-
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
@@ -89,24 +88,21 @@ defineFeature(feature, (test) => {
         AlarmHistoryItems: alarmHistory,
       };
 
-      table.forEach((row) => {
+      table.forEach(row => {
         const history = {
-          version: "1.0",
-          oldState:
-          {
+          version: '1.0',
+          oldState: {
             stateValue: row.oldState,
-            stateReason: "blah",
+            stateReason: 'blah',
           },
-          newState:
-          {
+          newState: {
             stateValue: row.state,
-            stateReason: "more blah",
-            stateReasonData:
-            {
-              version: "1.0",
-              queryDate: "2019-05-27T08:17:07.386+0000",
-              startDate: "2019-05-27T07:57:00.000+0000",
-              statistic: "Average",
+            stateReason: 'more blah',
+            stateReasonData: {
+              version: '1.0',
+              queryDate: '2019-05-27T08:17:07.386+0000',
+              startDate: '2019-05-27T07:57:00.000+0000',
+              statistic: 'Average',
               period: 300,
               recentDatapoints: [0.0, 0.0, 0.0],
               threshold: 0,
@@ -115,43 +111,39 @@ defineFeature(feature, (test) => {
         };
         const item: AlarmHistoryItem = {
           Timestamp: row.date,
-          HistoryItemType: "StateUpdate",
+          HistoryItemType: 'StateUpdate',
           AlarmName: alarmName,
           HistoryData: JSON.stringify(history),
-          HistorySummary: "not important",
+          HistorySummary: 'not important',
         };
 
         // alarmHistory is returned in descending order
         // in feature files you need to list items in desc order
-        alarmHistory.push(item)
+        alarmHistory.push(item);
       });
-      AWS.mock("CloudWatch", "describeAlarmHistory", alarmHistoryResp);
+      AWS.mock('CloudWatch', 'describeAlarmHistory', alarmHistoryResp);
     });
-
   }
 
   function whenCloudWatchAlarmStateChanges(when) {
     when(/^CloudWatch alarm state changes to (.*) at "(.*)"$/, async (newState, time) => {
-
-      const prevState = JSON.parse(alarmHistory[alarmHistory.length - 1].HistoryData || "{}").newState.stateValue;
+      const prevState = JSON.parse(alarmHistory[alarmHistory.length - 1].HistoryData || '{}')
+        .newState.stateValue;
 
       const history = {
-        version: "1.0",
-        oldState:
-        {
+        version: '1.0',
+        oldState: {
           stateValue: prevState,
-          stateReason: "blah",
+          stateReason: 'blah',
         },
-        newState:
-        {
+        newState: {
           stateValue: newState,
-          stateReason: "more blah",
-          stateReasonData:
-          {
-            version: "1.0",
-            queryDate: "2019-05-27T08:17:07.386+0000",
-            startDate: "2019-05-27T07:57:00.000+0000",
-            statistic: "Average",
+          stateReason: 'more blah',
+          stateReasonData: {
+            version: '1.0',
+            queryDate: '2019-05-27T08:17:07.386+0000',
+            startDate: '2019-05-27T07:57:00.000+0000',
+            statistic: 'Average',
             period: 300,
             recentDatapoints: [0.0, 0.0, 0.0],
             threshold: 0,
@@ -161,10 +153,10 @@ defineFeature(feature, (test) => {
 
       const item: AlarmHistoryItem = {
         Timestamp: time,
-        HistoryItemType: "StateUpdate",
+        HistoryItemType: 'StateUpdate',
         AlarmName: alarmName,
         HistoryData: JSON.stringify(history),
-        HistorySummary: "not important",
+        HistorySummary: 'not important',
       };
 
       // alarmHistory is returned in descending order
@@ -172,25 +164,27 @@ defineFeature(feature, (test) => {
 
       const alarmDetail = {
         alarmName: alarmName,
-        state:
-        {
+        state: {
           value: newState,
-          reason: 'Threshold Crossed: 1 out of the last 1 datapoints [2.0 (18/11/19 07:02:00)] was greater than the threshold (0.0) (minimum 1 datapoint for OK -> ALARM transition).',
-          reasonData: '{"version":"1.0","queryDate":"2019-11-18T07:03:51.700+0000","startDate":"2019-11-18T07:02:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[2.0],"threshold":0.0}',
-          timestamp: time
+          reason:
+            'Threshold Crossed: 1 out of the last 1 datapoints [2.0 (18/11/19 07:02:00)] was greater than the threshold (0.0) (minimum 1 datapoint for OK -> ALARM transition).',
+          reasonData:
+            '{"version":"1.0","queryDate":"2019-11-18T07:03:51.700+0000","startDate":"2019-11-18T07:02:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[2.0],"threshold":0.0}',
+          timestamp: time,
         },
-        previousState:
-        {
+        previousState: {
           value: 'INSUFFICIENT_DATA',
-          reason: 'Threshold Crossed: 1 out of the last 1 datapoints [0.0 (18/11/19 06:56:00)] was not greater than the threshold (0.0) (minimum 1 datapoint for ALARM -> OK transition).',
-          reasonData: '{"version":"1.0","queryDate":"2019-11-18T06:57:51.670+0000","startDate":"2019-11-18T06:56:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[0.0],"threshold":0.0}',
-          timestamp: '2019-11-18T06:57:51.679+0000'
+          reason:
+            'Threshold Crossed: 1 out of the last 1 datapoints [0.0 (18/11/19 06:56:00)] was not greater than the threshold (0.0) (minimum 1 datapoint for ALARM -> OK transition).',
+          reasonData:
+            '{"version":"1.0","queryDate":"2019-11-18T06:57:51.670+0000","startDate":"2019-11-18T06:56:00.000+0000","statistic":"Sum","period":60,"recentDatapoints":[0.0],"threshold":0.0}',
+          timestamp: '2019-11-18T06:57:51.679+0000',
         },
-        configuration:
-        {
-          description: 'Example alarm for a flaky service - demonstrate capturing metrics based on alarms.'
-        }
-      }
+        configuration: {
+          description:
+            'Example alarm for a flaky service - demonstrate capturing metrics based on alarms.',
+        },
+      };
 
       //tslint:disable
       const mockCloudwatchEvent: CloudwatchStateChangeEvent = {
@@ -201,21 +195,19 @@ defineFeature(feature, (test) => {
         account: '12345',
         time: '2019-11-18T07:03:51Z',
         region: 'ap-southeast-2',
-        resources:
-          ['arn:aws:cloudwatch:ap-southeast-2:12345:alarm:flaky-service'],
-        detail: alarmDetail
+        resources: ['arn:aws:cloudwatch:ap-southeast-2:12345:alarm:flaky-service'],
+        detail: alarmDetail,
       };
 
       // simulate all the functions receiving the event
       await mttf(mockCloudwatchEvent);
       await mttr(mockCloudwatchEvent);
       await mtbf(mockCloudwatchEvent);
-
     });
   }
 
   function thenCloudWatchMetricShouldBeGenerated(then) {
-    then("the following CloudWatch metric should be generated:", (docString) => {
+    then('the following CloudWatch metric should be generated:', docString => {
       const expected = JSON.parse(docString);
       const expectedTsStr = expected.MetricData[0].Timestamp;
       expected.MetricData[0].Timestamp = new Date(expectedTsStr);
@@ -224,9 +216,8 @@ defineFeature(feature, (test) => {
   }
 
   function thenCloudWatchMetricShouldNotBeGenerated(then) {
-    then("It should not generate any metrics", () => {
+    then('It should not generate any metrics', () => {
       expect(cloudWatchSpy).not.toBeCalled();
     });
   }
-
 });
