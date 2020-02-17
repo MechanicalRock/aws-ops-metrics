@@ -16,7 +16,6 @@ defineFeature(feature, test => {
     cloudWatchSpy = jest.fn().mockReturnValue({});
     alarmHistory = [];
     AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
-      console.log('Params are: ', JSON.stringify(params));
       callback(null, cloudWatchSpy(params));
     });
   });
@@ -41,7 +40,7 @@ defineFeature(feature, test => {
     thenCloudWatchMetricShouldBeGenerated(then);
   });
 
-  test.only('Account level metrics should be generated', ({ given, when, then }) => {
+  test('Account level metrics should be generated', ({ given, when, then }) => {
     givenCloudWatchAlarmHasHistory(given);
 
     whenCloudWatchAlarmStateChanges(when);
@@ -209,8 +208,11 @@ defineFeature(feature, test => {
   function thenCloudWatchMetricShouldBeGenerated(then) {
     then('the following CloudWatch metric should be generated:', docString => {
       const expected = JSON.parse(docString);
-      const expectedTsStr = expected.MetricData[0].Timestamp;
-      expected.MetricData[0].Timestamp = new Date(expectedTsStr);
+      expected.MetricData.map(metricData => {
+        const timeStr = metricData.Timestamp;
+        metricData.Timestamp = new Date(timeStr);
+        return metricData;
+      });
       expect(cloudWatchSpy).toBeCalledWith(expected);
     });
   }
