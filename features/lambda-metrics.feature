@@ -18,6 +18,12 @@ Feature: Lambda Metrics
   -  Alarm state will never be reported the same twice in a row (not a change)
   - INSUFFICIENT_DATA should be ignored
 
+  Blacklist pattern:
+  - is optional (not set or empty)
+  - overrides other configuration (applied before other rules)
+  - is supplied as a regular expression
+  - prevents metric generation if the pattern is matched.
+
   Scenario: Account level metrics should be generated
     Given CloudWatch alarm "foo-service-health" has the following history:
       | date                     | state | oldSate           |
@@ -203,3 +209,11 @@ Feature: Lambda Metrics
         "Namespace": "Operations"
       }
       """
+  Scenario: Blacklist pattern matching
+    Given the blacklist pattern has been configured
+    And CloudWatch alarm "TargetTracking-table/ci-crawl-status-check-AlarmHigh-03b775c2-ea43-4b01-abe4-2bb1f7c71b30" has the following history:
+      | date                     | state | oldSate           |
+      | 2019-01-01T00:00:00.000Z | OK    | INSUFFICIENT_DATA |
+    When CloudWatch alarm state changes to ALARM at "2019-01-01T00:01:30.000Z"
+    Then It should not generate any metrics
+

@@ -1,6 +1,6 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: "AWS::Serverless-2016-10-31"
-Description: "Create service-health-metrics based on cloudwatch alarms."
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Create service-health-metrics based on cloudwatch alarms.'
 
 Metadata:
   AWS::ServerlessRepo::Application:
@@ -10,10 +10,16 @@ Metadata:
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE
     ReadmeUrl: README.md
-    Labels: ["metrics", "mttr", "mtbf"]
+    Labels: ['metrics', 'mttr', 'mtbf']
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.3.3
+    SemanticVersion: 1.3.4
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
+
+Parameters:
+  AlarmNameBlackListPattern:
+    Description: 'a regex pattern which would be matched agains alarm name in order to blacklist it from generating health metrics'
+    Type: String
+    Default: "(-AlarmHigh|-AlarmLow|-ProvisionedCapacityHigh|-ProvisionedCapacityLow)-(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}"
 
 Resources:
   DescribeAlarmPolicy:
@@ -24,7 +30,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action: cloudwatch:DescribeAlarmHistory
-            Resource: "*"
+            Resource: '*'
 
   ListPipelinePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -34,70 +40,79 @@ Resources:
         Statement:
           - Effect: Allow
             Action: codepipeline:ListPipelines
-            Resource: "*"
+            Resource: '*'
 
   MTTREventHandler:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Create CloudWatch mttr metric from cloudwatch alarm events
       Handler: mttr.handler
       Runtime: nodejs12.x
       CodeUri: .build/src
+      Environment:
+        Variables:
+          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
           Properties:
             Pattern:
               source:
-                - "aws.cloudwatch"
+                - 'aws.cloudwatch'
               detail-type:
-                - "CloudWatch Alarm State Change"
+                - 'CloudWatch Alarm State Change'
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
 
   MTBFEventHandler:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Create CloudWatch mtbf metric from cloudwatch alarm events
       Handler: mtbf.handler
       Runtime: nodejs12.x
       CodeUri: .build/src
+      Environment:
+        Variables:
+          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
           Properties:
             Pattern:
               source:
-                - "aws.cloudwatch"
+                - 'aws.cloudwatch'
               detail-type:
-                - "CloudWatch Alarm State Change"
+                - 'CloudWatch Alarm State Change'
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
 
   MTTFEventHandler:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Create CloudWatch mttf metric from cloudwatch alarm events
       Handler: mttf.handler
       Runtime: nodejs12.x
       CodeUri: .build/src
+      Environment:
+        Variables:
+          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
           Properties:
             Pattern:
               source:
-                - "aws.cloudwatch"
+                - 'aws.cloudwatch'
               detail-type:
-                - "CloudWatch Alarm State Change"
+                - 'CloudWatch Alarm State Change'
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
 
   DynamoStreamHandler:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Create CloudWatch mttf metric from cloudwatch alarm events
       Handler: dynamoStream.handler
@@ -112,7 +127,7 @@ Resources:
           Type: DynamoDB
           Properties:
             Stream:
-              "Fn::GetAtt":
+              'Fn::GetAtt':
                 - EventStoreDynamoTable
                 - StreamArn
             StartingPosition: TRIM_HORIZON
@@ -122,7 +137,7 @@ Resources:
             TableName: MetricsEventStore
 
   StateChangeHandler:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Capturing all cloudwatch alarm State changes in dynamo
       Handler: stateChangeHandler.handler
@@ -137,9 +152,9 @@ Resources:
           Properties:
             Pattern:
               source:
-                - "aws.cloudwatch"
+                - 'aws.cloudwatch'
               detail-type:
-                - "CloudWatch Alarm State Change"
+                - 'CloudWatch Alarm State Change'
       Policies:
         - DynamoDBCrudPolicy:
             TableName: MetricsEventStore
@@ -147,7 +162,7 @@ Resources:
         - !Ref DescribeAlarmPolicy
 
   OpsDashboardGenerator:
-    Type: "AWS::Serverless::Function"
+    Type: 'AWS::Serverless::Function'
     Properties:
       Description: Build OPS Trend dashboard from CloudWatch metrics
       Handler: dashboardHandler.generateDashboardTrend
@@ -158,7 +173,7 @@ Resources:
         DashboardEventRule:
           Type: Schedule
           Properties:
-            Schedule: "cron(*/5 * * * ? *)"
+            Schedule: 'cron(*/5 * * * ? *)'
       Policies:
         - CloudWatchDashboardPolicy: {}
 
@@ -170,35 +185,35 @@ Resources:
       SSESpecification:
         SSEEnabled: true
       AttributeDefinitions:
-        - AttributeName: "id"
-          AttributeType: "S"
-        - AttributeName: "resourceId"
-          AttributeType: "S"
-        - AttributeName: "pipelineName"
-          AttributeType: "S"
-        - AttributeName: "bookmarked"
-          AttributeType: "S"
+        - AttributeName: 'id'
+          AttributeType: 'S'
+        - AttributeName: 'resourceId'
+          AttributeType: 'S'
+        - AttributeName: 'pipelineName'
+          AttributeType: 'S'
+        - AttributeName: 'bookmarked'
+          AttributeType: 'S'
       KeySchema:
-        - AttributeName: "id"
+        - AttributeName: 'id'
           KeyType: HASH
-        - AttributeName: "resourceId"
-          KeyType: "RANGE"
+        - AttributeName: 'resourceId'
+          KeyType: 'RANGE'
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
-        - IndexName: "resourceId-id-index"
+        - IndexName: 'resourceId-id-index'
           KeySchema:
-            - AttributeName: "resourceId"
+            - AttributeName: 'resourceId'
               KeyType: HASH
-            - AttributeName: "id"
+            - AttributeName: 'id'
               KeyType: RANGE
           Projection:
-            ProjectionType: "ALL"
-        - IndexName: "pipelineName-index"
+            ProjectionType: 'ALL'
+        - IndexName: 'pipelineName-index'
           KeySchema:
-            - AttributeName: "pipelineName"
+            - AttributeName: 'pipelineName'
               KeyType: HASH
-            - AttributeName: "bookmarked"
+            - AttributeName: 'bookmarked'
               KeyType: RANGE
           Projection:
-            ProjectionType: "ALL"
+            ProjectionType: 'ALL'

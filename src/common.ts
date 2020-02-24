@@ -60,10 +60,29 @@ export function sortItemsByResourceId(items: AWS.DynamoDB.DocumentClient.QueryOu
   return [];
 }
 
+export function matchesBlackList(alarmName: string): boolean {
+  if (process.env.IGNORED_ALARM_NAME_PATTERN) {
+    const ignoredAlarmNamePatternMatch = alarmName.match(process.env.IGNORED_ALARM_NAME_PATTERN);
+    if (ignoredAlarmNamePatternMatch) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function calculateMetric(metric: string, newState: AlarmState, oldState: AlarmState) {
   return async (event: CloudwatchStateChangeEvent) => {
     const cw = new CloudWatch();
     console.debug('Event received: ' + JSON.stringify(event));
+    if (matchesBlackList(event.detail.alarmName)) {
+      console.debug(`The alarm matches the blacklist alarm pattern therefore Ignoring it`);
+
+      console.debug(
+        `Alarm name: ${event.detail.alarmName} \nBlacklist Pattern: ${process.env.IGNORED_ALARM_NAME_PATTERN}`,
+      );
+      return {};
+    }
+
     if (!isAlarmEventForState(event, newState)) {
       console.debug(`State '${newState}' not matched for event. Ignoring`);
       return {};
