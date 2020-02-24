@@ -18,7 +18,7 @@ defineFeature(feature, test => {
     AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
       callback(null, cloudWatchSpy(params));
     });
-    process.env.IGNORED_ALARM_NAME_PATTERN = undefined;
+    process.env.ALARM_NAME_BLACKLIST_PATTERN = undefined;
   });
 
   afterEach(() => {
@@ -93,7 +93,7 @@ defineFeature(feature, test => {
 
   function givenBlackListPatternIs(given) {
     given(/^the blacklist pattern has been configured$/, () => {
-      process.env.IGNORED_ALARM_NAME_PATTERN =
+      process.env.ALARM_NAME_BLACKLIST_PATTERN =
         '(-AlarmHigh|-AlarmLow|-ProvisionedCapacityHigh|-ProvisionedCapacityLow)-(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}';
     });
   }

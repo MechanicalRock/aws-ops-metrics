@@ -19,6 +19,7 @@ Parameters:
   AlarmNameBlackListPattern:
     Description: 'a regex pattern which would be matched agains alarm name in order to blacklist it from generating health metrics'
     Type: String
+    # Below default regex pattern matches the auto generated alarm names created by dynamodb's auto scaling
     Default: "(-AlarmHigh|-AlarmLow|-ProvisionedCapacityHigh|-ProvisionedCapacityLow)-(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}"
 
 Resources:
@@ -51,7 +52,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
+          ALARM_NAME_BLACKLIST_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
@@ -74,7 +75,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
+          ALARM_NAME_BLACKLIST_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
@@ -97,7 +98,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          IGNORED_ALARM_NAME_PATTERN: !Ref AlarmNameBlackListPattern
+          ALARM_NAME_BLACKLIST_PATTERN: !Ref AlarmNameBlackListPattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent

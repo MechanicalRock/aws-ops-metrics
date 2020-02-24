@@ -61,8 +61,8 @@ export function sortItemsByResourceId(items: AWS.DynamoDB.DocumentClient.QueryOu
 }
 
 export function matchesBlackList(alarmName: string): boolean {
-  if (process.env.IGNORED_ALARM_NAME_PATTERN) {
-    const ignoredAlarmNamePatternMatch = alarmName.match(process.env.IGNORED_ALARM_NAME_PATTERN);
+  if (process.env.ALARM_NAME_BLACKLIST_PATTERN) {
+    const ignoredAlarmNamePatternMatch = alarmName.match(process.env.ALARM_NAME_BLACKLIST_PATTERN);
     if (ignoredAlarmNamePatternMatch) {
       return true;
     }
@@ -78,7 +78,7 @@ export function calculateMetric(metric: string, newState: AlarmState, oldState: 
       console.debug(`The alarm matches the blacklist alarm pattern therefore Ignoring it`);
 
       console.debug(
-        `Alarm name: ${event.detail.alarmName} \nBlacklist Pattern: ${process.env.IGNORED_ALARM_NAME_PATTERN}`,
+        `Alarm name: ${event.detail.alarmName} \nBlacklist Pattern: ${process.env.ALARM_NAME_BLACKLIST_PATTERN}`,
       );
       return {};
     }
