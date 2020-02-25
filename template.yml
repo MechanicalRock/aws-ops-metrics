@@ -21,6 +21,16 @@ Parameters:
     Type: String
     # Below default regex pattern matches the auto generated alarm names created by dynamodb's auto scaling
     Default: "(-AlarmHigh|-AlarmLow|-ProvisionedCapacityHigh|-ProvisionedCapacityLow)-(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}"
+  PermissionsBoundary:
+    Description: "An optional permissions boundary to apply to all roles"
+    Type: String
+    ConstraintDescription: Must match a valid ARN of an IAM policy for the permission boundary
+    AllowedPattern: "^$|arn:aws:iam::\d{12}:policy/[a-zA-Z]+$"
+    Default: ""
+
+Conditions:
+  HasPermissionBoundary:
+    !Not [!Equals [!Ref PermissionBoundary, ""]]
 
 Resources:
   DescribeAlarmPolicy:
@@ -65,6 +75,8 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
+
 
   MTBFEventHandler:
     Type: 'AWS::Serverless::Function'
@@ -88,6 +100,7 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   MTTFEventHandler:
     Type: 'AWS::Serverless::Function'
@@ -111,6 +124,7 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - !Ref DescribeAlarmPolicy
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   DynamoStreamHandler:
     Type: 'AWS::Serverless::Function'
@@ -136,6 +150,7 @@ Resources:
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
             TableName: MetricsEventStore
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   StateChangeHandler:
     Type: 'AWS::Serverless::Function'
@@ -161,6 +176,7 @@ Resources:
             TableName: MetricsEventStore
         - !Ref ListPipelinePolicy
         - !Ref DescribeAlarmPolicy
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   OpsDashboardGenerator:
     Type: 'AWS::Serverless::Function'
@@ -177,6 +193,7 @@ Resources:
             Schedule: 'cron(*/5 * * * ? *)'
       Policies:
         - CloudWatchDashboardPolicy: {}
+      PermissionsBoundary: !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
   EventStoreDynamoTable:
     Type: AWS::DynamoDB::Table
