@@ -18,6 +18,7 @@ defineFeature(feature, test => {
     AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
       callback(null, cloudWatchSpy(params));
     });
+    process.env.ALARM_NAME_BLACKLIST_PATTERN = undefined;
   });
 
   afterEach(() => {
@@ -79,6 +80,23 @@ defineFeature(feature, test => {
 
     thenCloudWatchMetricShouldBeGenerated(then);
   });
+
+  test('Blacklist pattern matching', ({ given, when, then }) => {
+    givenBlackListPatternIs(given);
+
+    givenCloudWatchAlarmHasHistory(given);
+
+    whenCloudWatchAlarmStateChanges(when);
+
+    thenCloudWatchMetricShouldNotBeGenerated(then);
+  });
+
+  function givenBlackListPatternIs(given) {
+    given(/^the blacklist pattern has been configured$/, () => {
+      process.env.ALARM_NAME_BLACKLIST_PATTERN =
+        '(-AlarmHigh|-AlarmLow|-ProvisionedCapacityHigh|-ProvisionedCapacityLow)-(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}';
+    });
+  }
 
   function givenCloudWatchAlarmHasHistory(given) {
     given(/^CloudWatch alarm "(.*)" has the following history:$/, (name, table) => {
