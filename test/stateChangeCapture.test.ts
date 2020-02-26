@@ -163,6 +163,13 @@ describe('stateChangeCapture', () => {
       expect(codePipelineSpy).not.toBeCalled();
       expect(dynamoPutSpy).not.toBeCalled();
     });
+
+    it('should ignore alarms if alarmName ends with -service-health', async () => {
+      const event: CloudwatchStateChangeEvent = givenNoPreviousStateInDynamo('OK', 'ALARM');
+      event.detail.alarmName = 'flaky-service-service-health';
+      await whenHandlerInvoked(event);
+      expect(dynamoPutSpy).not.toBeCalled();
+    });
   });
 
   function givenNoPreviousStateInDynamo(currentState: string, prevState: string) {

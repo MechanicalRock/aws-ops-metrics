@@ -48,6 +48,9 @@ export class StateChangeCapture {
     lastStateItemInDynamo: null,
   };
   public async run(event: CloudwatchStateChangeEvent): Promise<void> {
+    if (event.detail.alarmName.endsWith('-service-health')) {
+      return;
+    }
     const stateChanged = await this.hasStatusChanged(event);
 
     if (stateChanged) {
