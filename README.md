@@ -27,6 +27,34 @@ Metrics are generated under the namespace `Operations`, named for the metric, e.
 
 ![sample-dashboard](./doc/img/availability-metrics-dashboard.png)
 
+### Permission Boundaries
+This project creates Lambda functions, with associated roles.  In your environment, you may wish to apply a permission boundary to all roles created.
+
+The optional parameter `PermissionsBoundary` allows you to provide the ARN of an exising IAM Policy you have created to apply to all roles as a permission boundary.
+
+**NOTE:** for successful deployment, the permission boundary must, at a minimum, allow the permissions required for this solution:
+```
+Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: cloudwatch:DescribeAlarmHistory
+            Resource: '*'
+          - Effect: Allow
+            Action: codepipeline:ListPipelines
+            Resource: '*'
+          - Effect: Allow
+            Action: cloudwatch:PutMetric
+            Resource: '*'
+          - Effect: Allow
+            Action:
+             - dynamodb:GetRecords
+             - dynamodb:GetShardIterator
+             - dynamodb:DescribeStream
+             - dynamodb:ListStreams
+            Resource: '*'
+
+```
+
 ## Adding to your project
 
 This project does not define the alarms you wish to monitor, but provides the framework for notifying on those metrics.
