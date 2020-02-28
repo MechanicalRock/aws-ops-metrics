@@ -3,6 +3,11 @@
   "version": "1.3.5",
   "description": "",
   "main": "src/index.js",
+  "config": {
+    "region": "ap-southeast-2",
+    "staging_bucket": "mr-ops-metrics-sar",
+    "stack_name": "aws-ops-metrics"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf .build",
@@ -14,7 +19,7 @@
     "delete:dev": "serverless remove --stage dev",
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
-    "package": "sam package --template-file template.yml --s3-bucket ${STAGING_BUCKET_PREFIX}-${AWS_REGION}",
+    "package": "sam package --template-file template.yml --s3-bucket ${npm_package_config_staging_bucket}-${npm_package_config_region} --output-template-file .out/packaged.yaml",
     "preversion": "npm run build",
     "prepublish": "npm run build",
     "release": "npm run clean && npm version && npm run test && npm login && npm publish && npm run test:security-monitor && git push && git push --tags",
