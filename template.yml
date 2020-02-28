@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['metrics', 'mttr', 'mtbf']
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.4.0
+    SemanticVersion: 1.5.0
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Parameters:
@@ -27,6 +27,11 @@ Parameters:
     ConstraintDescription: Must match a valid ARN of an IAM policy for the permission boundary
     AllowedPattern: "^$|arn:aws:iam::\\d{12}:policy/[a-zA-Z\\-]+$"
     Default: ""
+  SanitisePattern:
+    Description: 'comma delimited list of patterns to use to sanitise pipeline names.  Strips the pipeline name to characters before the matching patter.  Example pipeline with name "foo-pipeline123" and sanitise pattern "-pipeline" will be reported as "foo"'
+    Type: CommaDelimitedList
+    Default: "-pipeline"
+    AllowedPattern: [a-zA-Z_\\-]+(,[a-zA-Z_\\-]+)*
 
 Conditions:
   HasPermissionBoundary: !Not [!Equals [!Ref PermissionsBoundary, ""]]

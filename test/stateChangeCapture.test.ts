@@ -22,6 +22,7 @@ describe('stateChangeCapture', () => {
   });
 
   describe('sanitizePipelineName', () => {
+
     const examples = [
       'foo-pipeline',
       'foo-pipeline-123',
@@ -31,14 +32,95 @@ describe('stateChangeCapture', () => {
       'foo-codePipeline0987655',
       'foo_codePipeline',
       'foo_codePipeline876tghujn',
-      'foo-cnf-pipeline',
-      'foo-cnf-pipeline1234345jkdk',
+      'foo-my-pipeline',
+      'foo-my-pipeline1234345jkdk',
       'foo_cnf-pipeline1234345jkdk',
       'foo_cnf_pipeline1234345jkdk',
     ];
-    it.each(examples)('should return clean pipeline name', example => {
-      expect(sanitizePipelineName(example)).toEqual('foo');
-    });
+
+    describe('no naming convention defined', () => {
+
+      beforeEach(() => {
+        delete process.env.SANITISE_PATTERNS
+      })
+
+      const examples = [
+        ['foo-pipeline', 'foo'],
+        ['foo-pipeline-123', 'foo'],
+        ['foo_pipeline', 'foo_pipeline'],
+        ['foo_pipeline397654', 'foo_pipeline397654'],
+        ['foo-codePipeline', 'foo-codePipeline'],
+        ['foo-codePipeline0987655', 'foo-codePipeline0987655'],
+        ['foo_codePipeline', 'foo_codePipeline'],
+        ['foo_codePipeline876tghujn', 'foo_codePipeline876tghujn'],
+        ['foo-my-pipeline', 'foo-my'],
+        ['foo-my-pipeline1234345jkdk', 'foo-my'],
+        ['foo_my-pipeline1234345jkdk', 'foo_my'],
+        ['foo_my_pipeline1234345jkdk', 'foo_my_pipeline1234345jkdk'],
+      ];
+      it.each(examples)('should default to "-pipeline" only', (actual, expected) => {
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+    })
+
+    describe('single naming convention defined', () => {
+      beforeEach(() => {
+        process.env.SANITISE_PATTERNS = "-my-pipeline"
+      })
+
+      const examples = [
+        ['foo-pipeline', 'foo-pipeline'],
+        ['foo-pipeline-123', 'foo-pipeline-123'],
+        ['foo_pipeline', 'foo_pipeline'],
+        ['foo_pipeline397654', 'foo_pipeline397654'],
+        ['foo-codePipeline', 'foo-codePipeline'],
+        ['foo-codePipeline0987655', 'foo-codePipeline0987655'],
+        ['foo_codePipeline', 'foo_codePipeline'],
+        ['foo_codePipeline876tghujn', 'foo_codePipeline876tghujn'],
+        ['foo-my-pipeline', 'foo'],
+        ['foo-my-pipeline1234345jkdk', 'foo'],
+        ['foo_my-pipeline1234345jkdk', 'foo_my-pipeline1234345jkdk'],
+        ['foo_my_pipeline1234345jkdk', 'foo_my_pipeline1234345jkdk'],
+      ];
+
+      it.each(examples)('should sanitise matching naming patterns', (actual, expected) => {
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+
+    })
+
+    describe('multiple naming convention defined', () => {
+      beforeEach(() => {
+        process.env.SANITISE_PATTERNS = "-codePipeline,_codePipeline,-my-pipeline,_my-pipeline,-my_pipeline,_my_pipeline,-pipeline,_pipeline"
+      })
+
+      const examples = [
+        ['foo-pipeline', 'foo'],
+        ['foo-pipeline-123', 'foo'],
+        ['foo_pipeline', 'foo'],
+        ['foo_pipeline397654', 'foo'],
+        ['foo-codePipeline', 'foo'],
+        ['foo-codePipeline0987655', 'foo'],
+        ['foo_codePipeline', 'foo'],
+        ['foo_codePipeline876tghujn', 'foo'],
+        ['foo-my-pipeline', 'foo'],
+        ['foo-my-pipeline1234345jkdk', 'foo'],
+        ['foo_my-pipeline1234345jkdk', 'foo'],
+        ['foo_my_pipeline1234345jkdk', 'foo'],
+        ['foo-this-doesnt-match-anything', 'foo-this-doesnt-match-anything'],
+
+      ];
+
+      it.each(examples)('should sanitise matching naming patterns in order of preference', (actual, expected) => {
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+
+      it.each(examples)('should strip whitespace from SANITISE_PATTERNS variable', (actual, expected) => {
+        process.env.SANITISE_PATTERNS = "-codePipeline  ,   _codePipeline   ,-my-pipeline,_my-pipeline, -my_pipeline,_my_pipeline,    -pipeline  ,  _pipeline"
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+    })
+
   });
 
   describe('when previous state exists', () => {

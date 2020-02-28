@@ -8,39 +8,27 @@ export interface LastItemState {
 }
 
 export function sanitizePipelineName(pipelineName: string | undefined): string {
-  if (pipelineName) {
-    let matchResult = pipelineName.split('_codePipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('-codePipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('_cnf_pipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('-cnf-pipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('_cnf-pipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('-pipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
-    matchResult = pipelineName.split('_pipeline');
-    if (matchResult.length > 1) {
-      return matchResult[0];
-    }
 
-    return pipelineName;
+  const sanitisePatterns = process.env.SANITISE_PATTERNS || "-pipeline"
+  const removeWhitespace = (x: string) => x.trim()
+
+  if (pipelineName) {
+    const sanitise = pattern => {
+      const matchResult = pipelineName.split(pattern)
+      if (matchResult.length > 1) {
+        return matchResult[0]
+      } else {
+        //no match
+        return undefined
+      }
+    }
+    const firstMatch = (result) => result !== undefined
+
+    const sanitisedName = sanitisePatterns.split(',').map(removeWhitespace).map(sanitise).find(firstMatch)
+    return sanitisedName || pipelineName
   }
-  return '';
+  return ''
+
 }
 
 export class StateChangeCapture {
@@ -118,10 +106,10 @@ export class StateChangeCapture {
     const pipelineNames = await this.getPipelineNames();
     const pipelineName = pipelineNames
       ? pipelineNames.find(name =>
-          name && event.detail && event.detail.alarmName
-            ? event.detail.alarmName.toLowerCase().includes(name.toLowerCase())
-            : false,
-        )
+        name && event.detail && event.detail.alarmName
+          ? event.detail.alarmName.toLowerCase().includes(name.toLowerCase())
+          : false,
+      )
       : '';
     if (!pipelineName) {
       throw new Error('pipelineName matching with alarmName was not found');
