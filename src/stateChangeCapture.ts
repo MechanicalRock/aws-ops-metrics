@@ -29,39 +29,6 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
   }
   return ''
 
-  // if (pipelineName) {
-  //   let matchResult = pipelineName.split('_codePipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('-codePipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('_cnf_pipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('-cnf-pipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('_cnf-pipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('-pipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-  //   matchResult = pipelineName.split('_pipeline');
-  //   if (matchResult.length > 1) {
-  //     return matchResult[0];
-  //   }
-
-  //   return pipelineName;
-  // }
-  // return '';
 }
 
 export class StateChangeCapture {
