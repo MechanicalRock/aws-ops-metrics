@@ -31,23 +31,25 @@ const SEVEN_DAYS = 60 * 60 * 24 * 7;
 
 const applyLimits = state => {
   // See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_limits.html
-  const maxMetricsPerWidget = 100;
-  const maxMetricsPerServiceInAWidget = 2;
-  const maxServices = Math.floor(maxMetricsPerWidget / maxMetricsPerServiceInAWidget);
+  const maxMetricsPerDashboard = 500;
+  const maxMetricsPerServiceInAWidget = 1;
+  const maxWidget = 6
+  const maxServices = Math.floor(maxMetricsPerDashboard / (maxWidget * maxMetricsPerServiceInAWidget));
 
   // For each service there will be three metrics (MTTR, MTBF, MTTF)
-  const maxSupportedMetrics = maxServices * 3;
+  const maxSupportedMetrics = maxServices ;
 
-  if (state.metrics.length > maxSupportedMetrics) {
-    console.warn(
-      `Maximum of ${maxSupportedMetrics} metrics are allowed in a single dashboard. Some metrics will not be reported.`,
-    );
-    console.log('List of Metrics before truncate: ', JSON.stringify(state.metrics));
-    state.metrics = state.metrics.sort((a, b) => (a.serviceName > b.serviceName ? 1 : -1));
-    state.metrics = state.metrics.slice(0, maxSupportedMetrics);
-    console.log('List of Metrics after truncate: ', JSON.stringify(state.metrics));
-    state.expectTruncated = true;
-    state.yOffset = 2;
+  for(let i = 0; i<state.widgetMappings.length; i++) {
+    state.widgetMappings[i].filteredMetrics = state.metrics.filter(x => x.metricName === state.widgetMappings[i].label);
+    if (state.widgetMappings[i].filteredMetrics.length > maxSupportedMetrics) {
+      console.warn(
+        `Maximum of ${maxSupportedMetrics} metrics are allowed in a single dashboard. Some metrics will not be reported.`,
+      );
+      state.widgetMappings[i].filteredMetrics = state.widgetMappings[i].filteredMetrics.sort((a, b) => (a.serviceName > b.serviceName ? 1 : -1));
+      state.widgetMappings[i].filteredMetrics = state.widgetMappings[i].filteredMetrics.slice(0, maxSupportedMetrics);
+      state.expectTruncated = true;
+      state.yOffset = 2;
+    }
   }
 };
 
@@ -58,8 +60,8 @@ function flattenNestedArray(array) {
 function trendWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
     const region = state.region;
-    const filterredGroup = metrics.filter(x => x.metricName == mapping.label);
-    let resultMetrics = filterredGroup.map((mappinggroup, index) => {
+
+    let resultMetrics = mapping.filteredMetrics.map((mappinggroup, index) => {
       const convertedMetric = `m${index}/${mapping.unitConversion.unit}`;
 
       return [
@@ -120,8 +122,7 @@ function trendWidgets(metrics, y, state) {
 
 function averageWidgets(metrics, y, state) {
   return state.widgetMappings.map(mapping => {
-    const filteredGroup = metrics.filter(x => x.metricName == mapping.label);
-    let resultMetrics = filteredGroup.map((mappingGroup, index) => {
+    let resultMetrics = mapping.filteredMetrics.map((mappingGroup, index) => {
       return [
         'Operations',
         mappingGroup.metricName,
@@ -167,6 +168,7 @@ class DashboardTrendGenerator {
         x: 0,
         unitConversion: HOURS,
         label: 'MTTR',
+        filteredMetrics:[],
         properties: {
           annotations: {
             horizontal: [
@@ -201,6 +203,7 @@ class DashboardTrendGenerator {
         x: 8,
         unitConversion: DAYS,
         label: 'MTBF',
+        filteredMetrics:[],
         properties: {
           annotations: {
             horizontal: [
@@ -235,6 +238,7 @@ class DashboardTrendGenerator {
         x: 16,
         unitConversion: DAYS,
         label: 'MTTF',
+        filteredMetrics:[],
         properties: {
           annotations: {
             horizontal: [
@@ -368,7 +372,6 @@ class DashboardTrendGenerator {
 
     // flatten the nested arrays
     dashboard.widgets = flattenNestedArray(dashboard.widgets);
-    console.log('Dashboard body is: ', JSON.stringify(dashboard));
     return state.cloudwatch
       .putDashboard({
         DashboardName: 'AvailabilityTrends-' + state.region,
