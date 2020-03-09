@@ -141,7 +141,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          TABLE_NAME: MetricsEventStore
+          TABLE_NAME: !Ref EventStoreDynamoTable
       ReservedConcurrentExecutions: 1
       Events:
         DynamoDBStream:
@@ -168,7 +168,7 @@ Resources:
       CodeUri: .build/src
       Environment:
         Variables:
-          TABLE_NAME: MetricsEventStore
+          TABLE_NAME: !Ref EventStoreDynamoTable
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
@@ -207,7 +207,6 @@ Resources:
   EventStoreDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: MetricsEventStore
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
