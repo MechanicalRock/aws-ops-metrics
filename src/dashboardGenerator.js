@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 'use strict';
 
 const ANNOTATION_ELITE_COLOUR = '#98df8a';
@@ -32,27 +33,29 @@ const SEVEN_DAYS = 60 * 60 * 24 * 7;
 const applyLimits = state => {
   // See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_limits.html
   const maxMetricsPerDashboard = 500;
-  const maxMetricsPerServiceInAWidget = 1;
-  const maxWidget = 6
-  const maxServices = Math.floor(maxMetricsPerDashboard / (maxWidget * maxMetricsPerServiceInAWidget));
+  const totalMetricsPerServiceInAWidget = 1;
+  const totalWidgets = 6;
+  const maxSupportedMetrics = Math.floor(maxMetricsPerDashboard / (totalWidgets * totalMetricsPerServiceInAWidget));
 
   // For each service there will be three metrics (MTTR, MTBF, MTTF)
-  const maxSupportedMetrics = maxServices ;
 
   for(let i = 0; i<state.widgetMappings.length; i++) {
     state.widgetMappings[i].filteredMetrics = state.metrics.filter(x => x.metricName === state.widgetMappings[i].label);
     if (state.widgetMappings[i].filteredMetrics.length > maxSupportedMetrics) {
       console.warn(
-        `Maximum of ${maxSupportedMetrics} metrics are allowed in a single dashboard. Some metrics will not be reported.`,
+        `Maximum of ${maxSupportedMetrics} metrics are allowed on a widget for this dashboard. Some metrics will not be reported.`,
       );
-      state.widgetMappings[i].filteredMetrics = state.widgetMappings[i].filteredMetrics.sort((a, b) => (a.serviceName > b.serviceName ? 1 : -1));
-      state.widgetMappings[i].filteredMetrics = state.widgetMappings[i].filteredMetrics.slice(0, maxSupportedMetrics);
+      state.widgetMappings[i].filteredMetrics = truncateMetricsAtoZ(state.widgetMappings[i].filteredMetrics,maxSupportedMetrics)
       state.expectTruncated = true;
       state.yOffset = 2;
     }
   }
 };
-
+function truncateMetricsAtoZ (metrics,maxSupportedMetrics) {
+  let truncateResult = metrics.sort((a, b) => (a.serviceName > b.serviceName ? 1 : -1));
+  truncateResult = truncateResult.slice(0, maxSupportedMetrics);
+  return truncateResult;
+}
 function flattenNestedArray(array) {
   return [].concat.apply([], array);
 }

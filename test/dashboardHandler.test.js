@@ -187,12 +187,12 @@ describe("generateDashboardTrend", () => {
 
       if (scenario.expectTruncated) {
         describe('When there are too many metrics in the account', () => {
-          it('should report a maximum of 150 metrics in the dashboard', () => {
+          it('should report a maximum of 83 metrics in the dashboard', () => {
             const consoleSpy = sandbox.spy(console, 'warn')
             return LambdaTester(index.generateDashboardTrend)
               .event(scenario.event)
               .expectResult((result, additional) => {
-                expect(consoleSpy).to.have.been.calledWith("Maximum of 83 metrics are allowed in a single dashboard. Some metrics will not be reported.");
+                expect(consoleSpy).to.have.been.calledWith("Maximum of 83 metrics are allowed on a widget for this dashboard. Some metrics will not be reported.");
               });
           })
           it('should generate 4 text widgets - to explain each metric and a warning text to expect truncate', () => {
