@@ -29,7 +29,7 @@ Parameters:
     Default: ""
   SanitisePattern:
     Description: 'comma delimited list of patterns to use to sanitise pipeline names.  Strips the pipeline name to characters before the matching patter.  Example pipeline with name "foo-pipeline123" and sanitise pattern "-pipeline" will be reported as "foo"'
-    Type: CommaDelimitedList
+    Type: String
     Default: "-pipeline"
     AllowedPattern: '[a-zA-Z_\\-]+(,[a-zA-Z_\\-]+)*'
 
@@ -169,6 +169,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref EventStoreDynamoTable
+          SANITISE_PATTERNS: !Ref SanitisePattern
       Events:
         cloudwatchEvent:
           Type: CloudWatchEvent
