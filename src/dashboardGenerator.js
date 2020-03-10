@@ -33,19 +33,21 @@ const SEVEN_DAYS = 60 * 60 * 24 * 7;
 const applyLimits = state => {
   // See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_limits.html
   const maxMetricsPerDashboard = 500;
+  const maxMetricsPerWidget = 100;
   const totalMetricsPerServiceInAWidget = 1;
   const totalWidgets = 6;
-  const maxSupportedMetrics = Math.floor(maxMetricsPerDashboard / (totalWidgets * totalMetricsPerServiceInAWidget));
+  const maxSupportedMetricsPerWidget = Math.floor(maxMetricsPerDashboard / (totalWidgets * totalMetricsPerServiceInAWidget));
+  const maxPermittedMetrics = Math.min(maxMetricsPerWidget, maxSupportedMetricsPerWidget);
 
   // For each service there will be three metrics (MTTR, MTBF, MTTF)
 
   for(let i = 0; i<state.widgetMappings.length; i++) {
     state.widgetMappings[i].filteredMetrics = state.metrics.filter(x => x.metricName === state.widgetMappings[i].label);
-    if (state.widgetMappings[i].filteredMetrics.length > maxSupportedMetrics) {
+    if (state.widgetMappings[i].filteredMetrics.length > maxPermittedMetrics) {
       console.warn(
-        `Maximum of ${maxSupportedMetrics} metrics are allowed on a widget for this dashboard. Some metrics will not be reported.`,
+        `Maximum of ${maxPermittedMetrics} metrics are allowed on a widget for this dashboard. Some metrics will not be reported.`,
       );
-      state.widgetMappings[i].filteredMetrics = truncateMetricsAtoZ(state.widgetMappings[i].filteredMetrics,maxSupportedMetrics)
+      state.widgetMappings[i].filteredMetrics = truncateMetricsAtoZ(state.widgetMappings[i].filteredMetrics,maxPermittedMetrics)
       state.expectTruncated = true;
       state.yOffset = 2;
     }
