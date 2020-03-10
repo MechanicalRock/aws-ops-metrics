@@ -28,7 +28,8 @@
     "test:watch": "jest --watch",
     "test:it": "jest --config ./jest.integration.js",
     "test:security": "snyk test",
-    "test:security-monitor": "snyk monitor"
+    "test:security-monitor": "snyk monitor",
+    "validate": "sam validate"
   },
   "repository": {
     "type": "git",

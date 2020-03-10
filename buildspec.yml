@@ -14,6 +14,7 @@ phases:
       - npm test
       - sam --version
       - mkdir .out
+      - sam validate
       - sam package --template-file template.yml --s3-bucket ${STAGING_BUCKET_PREFIX}-${AWS_REGION} --output-template-file .out/packaged.yaml
       # FIXME - parse the version from the package.json
       - aws s3 cp .out/packaged.yaml s3://${STAGING_BUCKET_PREFIX}-${AWS_REGION}/1.5.0/template.yml
