@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['metrics', 'mttr', 'mtbf']
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.5.0
+    SemanticVersion: 1.6.0
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Parameters:
@@ -155,7 +155,7 @@ Resources:
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
-            TableName: MetricsEventStore
+            TableName: !Ref EventStoreDynamoTable
       PermissionsBoundary:
         !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
@@ -181,7 +181,7 @@ Resources:
                 - 'CloudWatch Alarm State Change'
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: MetricsEventStore
+            TableName: !Ref EventStoreDynamoTable
         - !Ref ListPipelinePolicy
         - !Ref DescribeAlarmPolicy
       PermissionsBoundary:
