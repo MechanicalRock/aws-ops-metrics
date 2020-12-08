@@ -3,7 +3,9 @@
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
   "editor.trimAutoWhitespace": false,
-  "editor.rulers": [100],
+  "editor.rulers": [
+    100
+  ],
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "editor.formatOnSave": false,
@@ -19,5 +21,14 @@
   "tslint.autoFixOnSave": false,
   "files.associations": {
     "*.json": "jsonc"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/*.js.map": true,
+    // "**/*.js": true,
+    "**/.DS_Store": true
   }
 }

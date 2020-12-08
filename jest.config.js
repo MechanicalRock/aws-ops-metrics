@@ -12,6 +12,7 @@ module.exports = {
   },
   "testMatch": [
     "<rootDir>/test/?(*.)(spec|test).ts?(x)",
+    "<rootDir>/test/*test.ts",
     "<rootDir>/test/?(*.)(spec|test).js?(x)",
     "**/*.steps.ts?(x)"
   ],
