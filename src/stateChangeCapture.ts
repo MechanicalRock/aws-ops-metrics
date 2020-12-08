@@ -13,25 +13,17 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
 
   if (pipelineName) {
     const sanitise = pattern => {
-      if (pattern.indexOf('*') !== -1) { // Dealing with a pattern with a *
+      if (pattern.indexOf('*') !== -1) {
         const StringBefore = pattern.split('*')[0]
         const StringAfter = pattern.split('*')[1]
-        // const size = pipelineName.split(StringAfter)[1] ? pipelineName.split(StringAfter)[1].length : 0
-
         if (pipelineName.includes(StringBefore) && pipelineName.includes(StringAfter)) {
           const expr = '(?<=' + StringBefore + ')[?=a-zA-Z0-9]+(?=' + StringAfter + ')'
           const matchResult = pipelineName.match(expr) ? (pipelineName.match(expr) + '') : undefined
           return matchResult
-          // const matchResult = pipelineName.substr(StringBefore.length, pipelineName.length - StringBefore.length - StringAfter.length - size)
-          // return matchResult
-        }
-        else {
-          return undefined
         }
       }
       else {
         const matchResult = pipelineName.split(pattern)
-
         if (matchResult.length > 1) {
           return matchResult[0]
         } else {
@@ -40,9 +32,7 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
         }
       }
     }
-
     const firstMatch = (result) => result !== undefined
-
     const sanitisedName = sanitisePatterns.split(',').map(removeWhitespace).map(sanitise).find(firstMatch)
     return sanitisedName || pipelineName
   }
