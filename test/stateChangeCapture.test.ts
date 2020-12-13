@@ -21,7 +21,7 @@ describe('stateChangeCapture', () => {
     eventStoreSpy.mockRestore();
   });
 
-  describe('sanitizePipelineName', () => { // Take a regex Input and spit out a santiized string
+  describe('sanitizePipelineName', () => {
 
     const examples = [
       'foo-pipeline',
@@ -36,10 +36,9 @@ describe('stateChangeCapture', () => {
       'foo-my-pipeline1234345jkdk',
       'foo_cnf-pipeline1234345jkdk',
       'foo_cnf_pipeline1234345jkdk',
-      'WEL-AppsPlatform-SimpleStartBackend@master-user-lambda-errors'
     ];
 
-    describe('no naming convention defined', () => { // Default shouldnt change
+    describe('no naming convention defined', () => {
 
       beforeEach(() => {
         delete process.env.SANITISE_PATTERNS
@@ -92,8 +91,7 @@ describe('stateChangeCapture', () => {
 
     describe('multiple naming convention defined', () => {
       beforeEach(() => {
-        process.env.SANITISE_PATTERNS = "-codePipeline,_codePipeline,-my-pipeline,_my-pipeline,-my_pipeline,_my_pipeline,-pipeline,_pipeline, *-codePipeline  ,   *_codePipeline   ,*-my-pipeline,*_my-pipeline, *-my_pipeline,*_my_pipeline,    *-pipeline  ,  *_pipeline,WEL-AppsPlatform-*@master"
-        // //
+        process.env.SANITISE_PATTERNS = "-codePipeline,_codePipeline,-my-pipeline,_my-pipeline,-my_pipeline,_my_pipeline,-pipeline,_pipeline"
       })
 
       const examples = [
@@ -110,7 +108,6 @@ describe('stateChangeCapture', () => {
         ['foo_my-pipeline1234345jkdk', 'foo'],
         ['foo_my_pipeline1234345jkdk', 'foo'],
         ['foo-this-doesnt-match-anything', 'foo-this-doesnt-match-anything'],
-        ['WEL-AppsPlatform-SimpleStartBackend@master', 'SimpleStartBackend'],
         ['foo-pipeline', 'foo'],
         ['foo-pipeline-123', 'foo'],
         ['foo_pipeline', 'foo'],
@@ -123,12 +120,53 @@ describe('stateChangeCapture', () => {
       })
 
       it.each(examples)('should strip whitespace from SANITISE_PATTERNS variable', (actual, expected) => {
-        process.env.SANITISE_PATTERNS = "-codePipeline,_codePipeline,-my-pipeline,_my-pipeline,-my_pipeline,_my_pipeline,-pipeline,_pipeline, *-codePipeline  ,   *_codePipeline   ,*-my-pipeline,*_my-pipeline, *-my_pipeline,*_my_pipeline,    *-pipeline  ,  *_pipeline,WEL-AppsPlatform-*@master"
+        process.env.SANITISE_PATTERNS = "-codePipeline,_codePipeline,-my-pipeline,_my-pipeline,-my_pipeline,_my_pipeline,-pipeline,_pipeline"
         expect(sanitizePipelineName(actual)).toEqual(expected);
       })
     })
 
+    describe('multiple regex pattern based naming conventions defined', () => {
+      beforeEach(() => {
+        process.env.IS_REGEX = "true"
+        process.env.SANITISE_PATTERNS = "[a-zA-z0-9]+(?=-codePipeline),(.*)(?=-codePipeline),(.*)(?=_codePipeline),(.*)(?=-my-pipeline),(.*)(?=_my-pipeline),(.*)(?=-my_pipeline),(.*)(?=_my_pipeline),(.*)(?=-pipeline),(.*)(?=_pipeline),(.*)(?=-codePipeline)  ,   (.*)(?=_codePipeline)   ,(.*)(?=-my-pipeline),(.*)(?=_my-pipeline), (.*)(?=-my_pipeline),(.*)(?=_my_pipeline),    (.*)(?=-pipeline)  ,  (.*)(?=_pipeline),(?<=foo-)(.*)+(?=@master)"
+
+      })
+
+      const examples = [
+        ['foo-pipeline', 'foo'],
+        ['foo-pipeline-123', 'foo'],
+        ['foo_pipeline', 'foo'],
+        ['foo_pipeline397654', 'foo'],
+        ['foo-codePipeline', 'foo'],
+        ['foo-codePipeline0987655', 'foo'],
+        ['foo_codePipeline', 'foo'],
+        ['foo_codePipeline876tghujn', 'foo'],
+        ['foo-my-pipeline', 'foo'],
+        ['foo-my-pipeline1234345jkdk', 'foo'],
+        ['foo_my-pipeline1234345jkdk', 'foo'],
+        ['foo_my_pipeline1234345jkdk', 'foo'],
+        ['foo-this-doesnt-match-anything', 'foo-this-doesnt-match-anything'],
+        ['foo-findmymatch@master', 'findmymatch'],
+        ['foo-pipeline', 'foo'],
+        ['foo-pipeline-123', 'foo'],
+        ['foo_pipeline', 'foo'],
+        ['foo_pipeline397654', 'foo'],
+      ];
+
+
+      it.each(examples)('should sanitise matching naming patterns in order of preference', (actual, expected) => {
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+
+      it.each(examples)('should strip whitespace from SANITISE_PATTERNS variable', (actual, expected) => {
+        process.env.SANITISE_PATTERNS = "[a-zA-z0-9]+(?=-codePipeline),(.*)(?=-codePipeline),(.*)(?=_codePipeline),(.*)(?=-my-pipeline),(.*)(?=_my-pipeline),(.*)(?=-my_pipeline),(.*)(?=_my_pipeline),(.*)(?=-pipeline),(.*)(?=_pipeline),(.*)(?=-codePipeline)  ,   (.*)(?=_codePipeline)   ,(.*)(?=-my-pipeline),(.*)(?=_my-pipeline), (.*)(?=-my_pipeline),(.*)(?=_my_pipeline),    (.*)(?=-pipeline)  ,  (.*)(?=_pipeline),(?<=foo-)(.*)+(?=@master)"
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+    })
+
+
   });
+
 
   describe('when previous state exists', () => {
     it('should set value to -1 when alarm state changes to OK', async () => {

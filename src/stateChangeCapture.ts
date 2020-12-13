@@ -13,14 +13,12 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
 
   if (pipelineName) {
     const sanitise = pattern => {
-      if (pattern.indexOf('*') !== -1) {
-        const StringBefore = pattern.split('*')[0]
-        const StringAfter = pattern.split('*')[1]
-        if (pipelineName.includes(StringBefore) && pipelineName.includes(StringAfter)) {
-          const expr = '(?<=' + StringBefore + ')[?=a-zA-Z0-9]+(?=' + StringAfter + ')'
-          const matchResult = pipelineName.match(expr) ? (pipelineName.match(expr) + '') : undefined
-          return matchResult
-        }
+      if (process.env.IS_REGEX && process.env.IS_REGEX == "true") { //pattern.indexOf('*') !== -1
+        const matchResult = pipelineName.match(pattern)
+        if (matchResult === null) {
+          return undefined
+        } else {
+          return pattern.includes('(.*)') ?  matchResult[1] : matchResult[0] }
       }
       else {
         const matchResult = pipelineName.split(pattern)

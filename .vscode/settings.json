@@ -28,7 +28,7 @@
     "**/.hg": true,
     "**/CVS": true,
     "**/*.js.map": true,
-    // "**/*.js": true,
+    "**/*.js": true,
     "**/.DS_Store": true
   }
 }
