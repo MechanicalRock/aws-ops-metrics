@@ -13,7 +13,7 @@ export function sanitizePipelineName(pipelineName: string | undefined): string {
 
   if (pipelineName) {
     const sanitise = pattern => {
-      if (process.env.IS_REGEX && process.env.IS_REGEX == "true") { //pattern.indexOf('*') !== -1
+      if (process.env.IS_REGEX && process.env.IS_REGEX == "true") {
         const matchResult = pipelineName.match(pattern)
         if (matchResult === null) {
           return undefined
