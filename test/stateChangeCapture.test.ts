@@ -125,6 +125,32 @@ describe('stateChangeCapture', () => {
       })
     })
 
+    describe('single regex based naming convention defined', () => {
+      beforeEach(() => {
+        process.env.IS_REGEX = "true"
+        process.env.SANITISE_PATTERNS = "(.*)-my-pipeline"
+      })
+
+      const examples = [
+        ['foo-pipeline', 'foo-pipeline'],
+        ['foo-pipeline-123', 'foo-pipeline-123'],
+        ['foo_pipeline', 'foo_pipeline'],
+        ['foo_pipeline397654', 'foo_pipeline397654'],
+        ['foo-codePipeline', 'foo-codePipeline'],
+        ['foo-codePipeline0987655', 'foo-codePipeline0987655'],
+        ['foo_codePipeline', 'foo_codePipeline'],
+        ['foo_codePipeline876tghujn', 'foo_codePipeline876tghujn'],
+        ['foo-my-pipeline', 'foo'],
+        ['foo-my-pipeline1234345jkdk', 'foo'],
+        ['foo_my-pipeline1234345jkdk', 'foo_my-pipeline1234345jkdk'],
+        ['foo_my_pipeline1234345jkdk', 'foo_my_pipeline1234345jkdk'],
+      ];
+
+      it.each(examples)('should sanitise matching naming patterns', (actual, expected) => {
+        expect(sanitizePipelineName(actual)).toEqual(expected);
+      })
+
+    })
     describe('multiple regex pattern based naming conventions defined', () => {
       beforeEach(() => {
         process.env.IS_REGEX = "true"

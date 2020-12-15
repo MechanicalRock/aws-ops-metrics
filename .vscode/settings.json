@@ -21,14 +21,5 @@
   "tslint.autoFixOnSave": false,
   "files.associations": {
     "*.json": "jsonc"
-  },
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/*.js.map": true,
-    "**/*.js": true,
-    "**/.DS_Store": true
   }
 }
