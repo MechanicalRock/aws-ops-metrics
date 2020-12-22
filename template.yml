@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['metrics', 'mttr', 'mtbf']
     HomePageUrl: https://github.com/MechanicalRock/aws-ops-metrics
-    SemanticVersion: 1.7.0
+    SemanticVersion: 1.7.1
     SourceCodeUrl: https://github.com/MechanicalRock/aws-ops-metrics
 
 Parameters:
@@ -27,11 +27,6 @@ Parameters:
     ConstraintDescription: Must match a valid ARN of an IAM policy for the permission boundary
     AllowedPattern: "^$|arn:aws:iam::\\d{12}:policy/[a-zA-Z\\-]+$"
     Default: ""
-  SanitisePattern:
-    Description: 'comma delimited list of patterns to use to sanitise pipeline names.  Strips the pipeline name to characters before the matching patter.  Example pipeline with name "foo-pipeline123" and sanitise pattern "-pipeline" will be reported as "foo"'
-    Type: String
-    Default: "-pipeline"
-    AllowedPattern: '[a-zA-Z_\\-]+(,[a-zA-Z_\\-]+)*'
 
 Conditions:
   HasPermissionBoundary: !Not [!Equals [!Ref PermissionsBoundary, ""]]
@@ -132,61 +127,6 @@ Resources:
       PermissionsBoundary:
         !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
 
-  DynamoStreamHandler:
-    Type: 'AWS::Serverless::Function'
-    Properties:
-      Description: Create CloudWatch mttf metric from cloudwatch alarm events
-      Handler: dynamoStream.handler
-      Runtime: nodejs12.x
-      CodeUri: .build/src
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref EventStoreDynamoTable
-      ReservedConcurrentExecutions: 1
-      Events:
-        DynamoDBStream:
-          Type: DynamoDB
-          Properties:
-            Stream:
-              'Fn::GetAtt':
-                - EventStoreDynamoTable
-                - StreamArn
-            StartingPosition: TRIM_HORIZON
-      Policies:
-        - CloudWatchPutMetricPolicy: {}
-        - DynamoDBCrudPolicy:
-            TableName: !Ref EventStoreDynamoTable
-      PermissionsBoundary:
-        !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-
-  StateChangeHandler:
-    Type: 'AWS::Serverless::Function'
-    Properties:
-      Description: Capturing all cloudwatch alarm State changes in dynamo
-      Handler: stateChangeHandler.handler
-      Runtime: nodejs12.x
-      CodeUri: .build/src
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref EventStoreDynamoTable
-          SANITISE_PATTERNS: !Ref SanitisePattern
-      Events:
-        cloudwatchEvent:
-          Type: CloudWatchEvent
-          Properties:
-            Pattern:
-              source:
-                - 'aws.cloudwatch'
-              detail-type:
-                - 'CloudWatch Alarm State Change'
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref EventStoreDynamoTable
-        - !Ref ListPipelinePolicy
-        - !Ref DescribeAlarmPolicy
-      PermissionsBoundary:
-        !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-
   OpsDashboardGenerator:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -204,43 +144,3 @@ Resources:
         - CloudWatchDashboardPolicy: {}
       PermissionsBoundary:
         !If [HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue]
-
-  EventStoreDynamoTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      SSESpecification:
-        SSEEnabled: true
-      AttributeDefinitions:
-        - AttributeName: 'id'
-          AttributeType: 'S'
-        - AttributeName: 'resourceId'
-          AttributeType: 'S'
-        - AttributeName: 'pipelineName'
-          AttributeType: 'S'
-        - AttributeName: 'bookmarked'
-          AttributeType: 'S'
-      KeySchema:
-        - AttributeName: 'id'
-          KeyType: HASH
-        - AttributeName: 'resourceId'
-          KeyType: 'RANGE'
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
-      GlobalSecondaryIndexes:
-        - IndexName: 'resourceId-id-index'
-          KeySchema:
-            - AttributeName: 'resourceId'
-              KeyType: HASH
-            - AttributeName: 'id'
-              KeyType: RANGE
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'pipelineName-index'
-          KeySchema:
-            - AttributeName: 'pipelineName'
-              KeyType: HASH
-            - AttributeName: 'bookmarked'
-              KeyType: RANGE
-          Projection:
-            ProjectionType: 'ALL'
