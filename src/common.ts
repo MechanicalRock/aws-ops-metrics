@@ -52,14 +52,6 @@ export interface CloudwatchStateChangeEvent {
   };
 }
 
-export function sortItemsByResourceId(items: AWS.DynamoDB.DocumentClient.QueryOutput) {
-  if (items.Items) {
-    const sortedlist = items.Items.sort((a, b) => (a.resourceId > b.resourceId ? 1 : -1));
-    return sortedlist;
-  }
-  return [];
-}
-
 export function matchesBlackList(alarmName: string): boolean {
   if (process.env.ALARM_NAME_BLACKLIST_PATTERN) {
     const ignoredAlarmNamePatternMatch = alarmName.match(process.env.ALARM_NAME_BLACKLIST_PATTERN);
