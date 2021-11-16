@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/MechanicalRock/aws-ops-metrics",
   "dependencies": {
-    "aws-sdk": "^2.798.0"
+    "aws-sdk": "^2.814.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.26",
