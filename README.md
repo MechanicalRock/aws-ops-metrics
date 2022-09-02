@@ -1,5 +1,7 @@
 # lambda-metrics
 
+*NOTE*: This repository is not maintained.  Use for reference purposes only.
+
 Common metrics for monitoring operational health are **MTTR** (Mean Time To Recovery), **MTTF** (Mean Time To Failure), **MTBF** (Mean Time Between Failure).
 
 ![failure-metrics](./doc/img/failure-metrics.png)
